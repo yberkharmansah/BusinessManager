@@ -1,6 +1,6 @@
 # modules/supplier_tab.py
 import tkinter as tk
-from tkinter import ttk, messagebox, filedialog
+from tkinter import ttk, filedialog
 from datetime import datetime, timedelta
 import sys
 import os
@@ -12,6 +12,7 @@ from database import (
     get_supplier_balances, add_smart_balance_transaction, get_supplier_total_balance,
     get_due_supplier_balances, fetch_one, get_supplier_transaction_history
 )
+from modules.ui_helpers import show_info, show_warning, show_error, ask_confirm, show_toast
 
 class SupplierTab:
     def __init__(self, parent, branch_id):
@@ -88,6 +89,9 @@ class SupplierTab:
         
         self.supplier_tree.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         scroll_y.config(command=self.supplier_tree.yview)
+
+        self.supplier_empty_label = ttk.Label(left_panel, text="Henüz toptancı yok.", style="Empty.TLabel")
+        self.supplier_empty_label.place(relx=0.5, rely=0.5, anchor="center")
         
         # Çift tıklama ve sağ tık menüsü
         self.supplier_menu = tk.Menu(self.supplier_tree, tearoff=0)
@@ -141,6 +145,9 @@ class SupplierTab:
         
         self.balance_tree.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         scroll_y2.config(command=self.balance_tree.yview)
+
+        self.balance_empty_label = ttk.Label(right_panel, text="Bakiye kaydı bulunmuyor.", style="Empty.TLabel")
+        self.balance_empty_label.place(relx=0.5, rely=0.5, anchor="center")
         
         # Bakiye sağ tık menüsü
         self.balance_menu = tk.Menu(self.balance_tree, tearoff=0)
@@ -223,6 +230,11 @@ class SupplierTab:
         self.supplier_tree.tag_configure('neutral', background='#f5f5f5', foreground='#616161')
         
         self.update_info_label()
+
+        if len(suppliers) == 0:
+            self.supplier_empty_label.place(relx=0.5, rely=0.5, anchor="center")
+        else:
+            self.supplier_empty_label.place_forget()
     
     def load_balances(self):
         """Bakiye hareketlerini listeler"""
@@ -271,6 +283,11 @@ class SupplierTab:
         self.balance_tree.tag_configure('caution', background='#fff9c4', foreground='#f57f17')
         self.balance_tree.tag_configure('active', background='#e8f5e9', foreground='#2e7d32')
         self.balance_tree.tag_configure('paid', background='#f5f5f5', foreground='#616161')
+
+        if len(balances) == 0:
+            self.balance_empty_label.place(relx=0.5, rely=0.5, anchor="center")
+        else:
+            self.balance_empty_label.place_forget()
     
     def update_info_label(self):
         """Bilgi etiketini günceller"""
@@ -308,6 +325,7 @@ class SupplierTab:
         dialog.configure(bg="#f5f7fb")
         dialog.transient(self.parent)
         dialog.grab_set()
+        dialog.bind("<Escape>", lambda e: dialog.destroy())
         
         # Form
         ttk.Label(dialog, text="Toptancı Adı *:").pack(pady=5)
@@ -342,6 +360,8 @@ class SupplierTab:
             text="❌ İptal",
             command=dialog.destroy
         ).pack(side=tk.LEFT, padx=10)
+
+        dialog.bind("<Return>", lambda e: self.save_supplier(dialog, name_entry, type_entry, phone_entry, email_entry))
     
     def save_supplier(self, dialog, name_entry, type_entry, phone_entry, email_entry):
         """Toptancıyı kaydeder"""
@@ -351,23 +371,23 @@ class SupplierTab:
         email = email_entry.get().strip()
         
         if not name or not supplier_type:
-            messagebox.showwarning("Eksik Bilgi", "Ad ve tür zorunludur!")
+            show_warning(dialog, "Eksik Bilgi", "Ad ve tür zorunludur!")
             return
         
         supplier_id = add_supplier(self.branch_id, name, supplier_type, phone, email)
         
         if supplier_id:
-            messagebox.showinfo("Başarılı", f"Toptancı eklendi: {name}")
+            show_toast(self.parent, f"Toptancı eklendi: {name}")
             dialog.destroy()
             self.load_suppliers()
         else:
-            messagebox.showerror("Hata", "Toptancı eklenemedi!")
+            show_error(dialog, "Hata", "Toptancı eklenemedi!")
     
     def edit_supplier(self):
         """Toptancı düzenleme - TÜR TEXTBOX"""
         selection = self.supplier_tree.selection()
         if not selection:
-            messagebox.showwarning("Seçim Yok", "Lütfen bir toptancı seçin!")
+            show_warning(self.parent, "Seçim Yok", "Lütfen bir toptancı seçin!")
             return
         
         supplier_id = self.supplier_tree.item(selection[0])['values'][0]
@@ -382,6 +402,7 @@ class SupplierTab:
         dialog.configure(bg="#f5f7fb")
         dialog.transient(self.parent)
         dialog.grab_set()
+        dialog.bind("<Escape>", lambda e: dialog.destroy())
         
         # Form
         ttk.Label(dialog, text="Toptancı Adı *:").pack(pady=5)
@@ -419,6 +440,8 @@ class SupplierTab:
             text="❌ İptal",
             command=dialog.destroy
         ).pack(side=tk.LEFT, padx=10)
+
+        dialog.bind("<Return>", lambda e: self.save_edited_supplier(dialog, supplier_id, name_entry, type_entry, phone_entry, email_entry))
     
     def save_edited_supplier(self, dialog, supplier_id, name_entry, type_entry, phone_entry, email_entry):
         """Düzenlenmiş toptancıyı kaydeder"""
@@ -428,36 +451,36 @@ class SupplierTab:
         email = email_entry.get().strip()
         
         if not name or not supplier_type:
-            messagebox.showwarning("Eksik Bilgi", "Ad ve tür zorunludur!")
+            show_warning(dialog, "Eksik Bilgi", "Ad ve tür zorunludur!")
             return
         
         success = update_supplier(supplier_id, name, supplier_type, phone, email)
         
         if success:
-            messagebox.showinfo("Başarılı", f"Toptancı güncellendi: {name}")
+            show_toast(self.parent, f"Toptancı güncellendi: {name}")
             dialog.destroy()
             self.load_suppliers()
         else:
-            messagebox.showerror("Hata", "Toptancı güncellenemedi!")
+            show_error(dialog, "Hata", "Toptancı güncellenemedi!")
     
     def delete_supplier(self):
         """Toptancıyı siler"""
         selection = self.supplier_tree.selection()
         if not selection:
-            messagebox.showwarning("Seçim Yok", "Lütfen bir toptancı seçin!")
+            show_warning(self.parent, "Seçim Yok", "Lütfen bir toptancı seçin!")
             return
         
         supplier_id = self.supplier_tree.item(selection[0])['values'][0]
         supplier_name = self.supplier_tree.item(selection[0])['values'][1]
         
-        if messagebox.askyesno("Silme Onayı", f"'{supplier_name}' ve tüm bakiyeleri silinsin mi?"):
+        if ask_confirm(self.parent, "Silme Onayı", f"'{supplier_name}' ve tüm bakiyeleri silinsin mi?"):
             success = delete_supplier(supplier_id)
             if success:
-                messagebox.showinfo("Başarılı", "Toptancı silindi!")
+                show_toast(self.parent, "Toptancı silindi!")
                 self.load_suppliers()
                 self.load_balances()
             else:
-                messagebox.showerror("Hata", "Toptancı silinemedi!")
+                show_error(self.parent, "Hata", "Toptancı silinemedi!")
     
     # SAĞ TIK İŞLEMLERİ
     def payment_from_context(self):
@@ -469,7 +492,7 @@ class SupplierTab:
         current_balance = get_supplier_total_balance(self.selected_supplier_id)
         
         if current_balance >= 0:
-            messagebox.showinfo("Bilgi", f"'{supplier['name']}' için ödeme yapacak borcunuz yok!\nMevcut bakiye: ₺{current_balance:.2f}")
+            show_info(self.parent, "Bilgi", f"'{supplier['name']}' için ödeme yapacak borcunuz yok!\nMevcut bakiye: ₺{current_balance:.2f}")
             return
         
         dialog = tk.Toplevel(self.parent)
@@ -478,6 +501,7 @@ class SupplierTab:
         dialog.configure(bg="#f5f7fb")
         dialog.transient(self.parent)
         dialog.grab_set()
+        dialog.bind("<Escape>", lambda e: dialog.destroy())
         
         ttk.Label(dialog, text=f"Toptancı: {supplier['name']}").pack(pady=10)
         ttk.Label(dialog, text=f"Mevcut Borç: ₺{abs(current_balance):.2f}").pack()
@@ -510,6 +534,11 @@ class SupplierTab:
             text="❌ İptal",
             command=dialog.destroy
         ).pack(side=tk.LEFT, padx=10)
+
+        dialog.bind(
+            "<Return>",
+            lambda e: self.process_smart_payment(dialog, self.selected_supplier_id, amount_entry, date_entry, desc_text, current_balance),
+        )
     
     def process_smart_payment(self, dialog, supplier_id, amount_entry, date_entry, desc_text, current_balance):
         """Akıllı ödeme işlemini gerçekleştirir"""
@@ -522,15 +551,15 @@ class SupplierTab:
             try:
                 datetime.strptime(payment_date, "%Y-%m-%d")
             except ValueError:
-                messagebox.showwarning("Hatalı Tarih", "Tarih formatı: YYYY-MM-DD")
+                show_warning(dialog, "Hatalı Tarih", "Tarih formatı: YYYY-MM-DD")
                 return
             
             if amount <= 0:
-                messagebox.showwarning("Hatalı Değer", "Ödeme miktarı 0'dan büyük olmalı!")
+                show_warning(dialog, "Hatalı Değer", "Ödeme miktarı 0'dan büyük olmalı!")
                 return
             
             if amount > abs(current_balance):
-                if not messagebox.askyesno("Fazla Ödeme", f"Ödeme miktarı borçtan fazla!\nFazla ödeme alacak olarak kaydedilsin mi?"):
+                if not ask_confirm(dialog, "Fazla Ödeme", "Ödeme miktarı borçtan fazla!\nFazla ödeme alacak olarak kaydedilsin mi?"):
                     return
             
             # Akıllı ödeme işlemi
@@ -546,20 +575,20 @@ class SupplierTab:
             if new_balance is not None:
                 supplier = fetch_one("SELECT * FROM suppliers WHERE id = ?", (supplier_id,))
                 if new_balance > 0:
-                    messagebox.showinfo("Başarılı", f"Ödeme tamamlandı!\nYeni alacağınız: ₺{new_balance:.2f}")
+                    show_info(self.parent, "Başarılı", f"Ödeme tamamlandı!\nYeni alacağınız: ₺{new_balance:.2f}")
                 elif new_balance < 0:
-                    messagebox.showinfo("Başarılı", f"Ödeme tamamlandı!\nKalan borcunuz: ₺{abs(new_balance):.2f}")
+                    show_info(self.parent, "Başarılı", f"Ödeme tamamlandı!\nKalan borcunuz: ₺{abs(new_balance):.2f}")
                 else:
-                    messagebox.showinfo("Başarılı", "Ödeme tamamlandı!\nBakiye sıfırlandı.")
+                    show_info(self.parent, "Başarılı", "Ödeme tamamlandı!\nBakiye sıfırlandı.")
                 
                 dialog.destroy()
                 self.load_balances()
                 self.load_suppliers()
             else:
-                messagebox.showerror("Hata", "Ödeme işlemi gerçekleştirilemedi!")
+                show_error(self.parent, "Hata", "Ödeme işlemi gerçekleştirilemedi!")
                 
         except ValueError:
-            messagebox.showwarning("Hatalı Değer", "Miktar sayısal olmalı!")
+            show_warning(dialog, "Hatalı Değer", "Miktar sayısal olmalı!")
     
     def add_debt_from_context(self):
         """Sağ tık → Borç Ekle"""
@@ -583,6 +612,7 @@ class SupplierTab:
         dialog.configure(bg="#f5f7fb")
         dialog.transient(self.parent)
         dialog.grab_set()
+        dialog.bind("<Escape>", lambda e: dialog.destroy())
         
         ttk.Label(dialog, text=f"Toptancı: {supplier['name']}").pack(pady=10)
         ttk.Label(dialog, text=f"Mevcut Bakiye: ₺{current_balance:.2f}").pack()
@@ -625,6 +655,11 @@ class SupplierTab:
             text="❌ İptal",
             command=dialog.destroy
         ).pack(side=tk.LEFT, padx=10)
+
+        dialog.bind(
+            "<Return>",
+            lambda e: self.save_balance_transaction(dialog, supplier['id'], type_combo, amount_entry, date_entry, due_date_entry, desc_text),
+        )
     
     def save_balance_transaction(self, dialog, supplier_id, type_combo, amount_entry, date_entry, due_date_entry, desc_text):
         """Bakiye işlemini kaydeder"""
@@ -641,11 +676,11 @@ class SupplierTab:
                 if due_date:
                     datetime.strptime(due_date, "%Y-%m-%d")
             except ValueError:
-                messagebox.showwarning("Hatalı Tarih", "Tarih formatı: YYYY-MM-DD")
+                show_warning(dialog, "Hatalı Tarih", "Tarih formatı: YYYY-MM-DD")
                 return
             
             if amount <= 0:
-                messagebox.showwarning("Hatalı Değer", "Tutar 0'dan büyük olmalı!")
+                show_warning(dialog, "Hatalı Değer", "Tutar 0'dan büyük olmalı!")
                 return
             
             # Akıllı bakiye işlemi
@@ -660,28 +695,28 @@ class SupplierTab:
             
             if new_balance is not None:
                 supplier = fetch_one("SELECT * FROM suppliers WHERE id = ?", (supplier_id,))
-                messagebox.showinfo("Başarılı", f"İşlem kaydedildi!\nYeni bakiye: ₺{new_balance:.2f}")
+                show_info(self.parent, "Başarılı", f"İşlem kaydedildi!\nYeni bakiye: ₺{new_balance:.2f}")
                 dialog.destroy()
                 self.load_balances()
                 self.load_suppliers()
             else:
-                messagebox.showerror("Hata", "İşlem kaydedilemedi!")
+                show_error(self.parent, "Hata", "İşlem kaydedilemedi!")
                 
         except ValueError:
-            messagebox.showwarning("Hatalı Değer", "Tutar sayısal olmalı!")
+            show_warning(dialog, "Hatalı Değer", "Tutar sayısal olmalı!")
     
     def payment_from_balance(self):
         """Bakiye listesinden ödeme yap"""
         selection = self.balance_tree.selection()
         if not selection:
-            messagebox.showwarning("Seçim Yok", "Lütfen bir bakiye seçin!")
+            show_warning(self.parent, "Seçim Yok", "Lütfen bir bakiye seçin!")
             return
         
         values = self.balance_tree.item(selection[0])['values']
         
         # Sadece BORÇ bakiyelerde ödeme yapılabilir
         if values[3] != "BORC":
-            messagebox.showinfo("Bilgi", "Sadece borç bakiyelerde ödeme yapılabilir!")
+            show_info(self.parent, "Bilgi", "Sadece borç bakiyelerde ödeme yapılabilir!")
             return
         
         balance_id = values[0]
@@ -698,6 +733,7 @@ class SupplierTab:
         dialog.configure(bg="#f5f7fb")
         dialog.transient(self.parent)
         dialog.grab_set()
+        dialog.bind("<Escape>", lambda e: dialog.destroy())
         
         ttk.Label(dialog, text=f"Toptancı: {supplier_name}").pack(pady=10)
         ttk.Label(dialog, text=f"Borç Tutarı: ₺{balance['amount']:.2f}").pack()
@@ -732,12 +768,17 @@ class SupplierTab:
             text="❌ İptal",
             command=dialog.destroy
         ).pack(side=tk.LEFT, padx=10)
+
+        dialog.bind(
+            "<Return>",
+            lambda e: self.process_smart_payment(dialog, balance['supplier_id'], amount_entry, date_entry, desc_text, current_balance),
+        )
     
     def update_balance_status(self):
         """Bakiye durumunu manuel güncelle"""
         selection = self.balance_tree.selection()
         if not selection:
-            messagebox.showwarning("Seçim Yok", "Lütfen bir bakiye seçin!")
+            show_warning(self.parent, "Seçim Yok", "Lütfen bir bakiye seçin!")
             return
         
         values = self.balance_tree.item(selection[0])['values']
@@ -749,6 +790,7 @@ class SupplierTab:
         dialog.configure(bg="#f5f7fb")
         dialog.transient(self.parent)
         dialog.grab_set()
+        dialog.bind("<Escape>", lambda e: dialog.destroy())
         
         ttk.Label(dialog, text="Yeni Durum:").pack(pady=10)
         status_combo = ttk.Combobox(dialog, values=["AKTIF", "ODENDI", "GECIKMIS"], state="readonly")
@@ -769,6 +811,8 @@ class SupplierTab:
             text="❌ İptal",
             command=dialog.destroy
         ).pack(side=tk.LEFT, padx=10)
+
+        dialog.bind("<Return>", lambda e: self.save_status(dialog, balance_id, status_combo))
     
     def save_status(self, dialog, balance_id, status_combo):
         """Durumu kaydeder"""
@@ -778,11 +822,11 @@ class SupplierTab:
         success = update_balance_status(balance_id, status)
         
         if success:
-            messagebox.showinfo("Başarılı", f"Bakiye durumu güncellendi: {status}")
+            show_toast(self.parent, f"Bakiye durumu güncellendi: {status}")
             dialog.destroy()
             self.load_balances()
         else:
-            messagebox.showerror("Hata", "Durum güncellenemedi!")
+            show_error(self.parent, "Hata", "Durum güncellenemedi!")
     
     def show_all_transactions(self):
         """Toptancının tüm hareketlerini göster"""
@@ -795,11 +839,12 @@ class SupplierTab:
         dialog = tk.Toplevel(self.parent)
         dialog.title(f"📋 Tüm Hareketler: {supplier['name']}")
         dialog.geometry("800x500")
+        dialog.configure(bg="#f5f7fb")
         dialog.transient(self.parent)
         dialog.grab_set()
         
         # Treeview
-        frame = tk.Frame(dialog)
+        frame = ttk.Frame(dialog)
         frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
         
         y_scroll = tk.Scrollbar(frame)
@@ -838,7 +883,7 @@ class SupplierTab:
                 trans['description'] or "-"
             ))
         
-        tk.Button(dialog, text="✅ Tamam", command=dialog.destroy, bg="#4CAF50", fg="white").pack(pady=10)
+        ttk.Button(dialog, text="✅ Tamam", command=dialog.destroy).pack(pady=10)
     
     def show_balance_details(self):
         """Bakiye detaylarını göster"""
@@ -854,6 +899,7 @@ class SupplierTab:
         dialog.configure(bg="#f5f7fb")
         dialog.transient(self.parent)
         dialog.grab_set()
+        dialog.bind("<Escape>", lambda e: dialog.destroy())
         
         # Detayları göster
         text_widget = tk.Text(dialog, height=10, width=60, font=("Segoe UI", 10), relief="solid", borderwidth=1)
@@ -888,7 +934,7 @@ Açıklama: {values[7] or 'Yok'}
             due_balances = get_due_supplier_balances(self.branch_id, days=7)
 
             if not due_balances:
-                messagebox.showinfo("Bilgi", "Yaklaşan ödeme bulunmuyor!")
+                show_info(self.parent, "Bilgi", "Yaklaşan ödeme bulunmuyor!")
                 return
 
             dialog = tk.Toplevel(self.parent)
@@ -897,6 +943,7 @@ Açıklama: {values[7] or 'Yok'}
             dialog.configure(bg="#f5f7fb")
             dialog.transient(self.parent)
             dialog.grab_set()
+            dialog.bind("<Escape>", lambda e: dialog.destroy())
 
             main_frame = ttk.Frame(dialog)
             main_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
@@ -961,14 +1008,15 @@ Açıklama: {values[7] or 'Yok'}
             ttk.Button(main_frame, text="✅ Tamam", command=dialog.destroy).pack(pady=10)
 
         except Exception as e:
-            messagebox.showerror("Hata", f"Yaklaşan ödemeler getirilirken hata oluştu:\n{str(e)}")
+            show_error(self.parent, "Hata", f"Yaklaşan ödemeler getirilirken hata oluştu:\n{str(e)}")
     def export_to_excel(self):
         """Excel raporu oluştur - HATASIZ VERSİYON"""
         try:
             from openpyxl import Workbook
             from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
         except ImportError:
-            messagebox.showerror(
+            show_error(
+                self.parent,
                 "Eksik Kütüphane",
                 "Excel aktarma için 'openpyxl' kütüphanesi gereklidir.\n\n"
                 "pip install openpyxl"
@@ -980,7 +1028,7 @@ Açıklama: {values[7] or 'Yok'}
         balances = get_supplier_balances(self.branch_id)
 
         if not suppliers:
-            messagebox.showinfo("Bilgi", "Aktarılacak toptancı bulunmuyor!")
+            show_info(self.parent, "Bilgi", "Aktarılacak toptancı bulunmuyor!")
             return
 
         # Excel oluştur
@@ -1115,13 +1163,15 @@ Açıklama: {values[7] or 'Yok'}
         if file_path:
             try:
                 wb.save(file_path)
-                messagebox.showinfo(
-                    "✅ Başarılı", 
+                show_info(
+                    self.parent,
+                    "✅ Başarılı",
                     f"Excel dosyası kaydedildi:\n{file_path}\n\n"
                     f"📊 {len(suppliers)} toptancı ve {len(balances)} bakiye kaydı aktarıldı."
                 )
             except Exception as e:
-                messagebox.showerror(
+                show_error(
+                    self.parent,
                     "❌ Hata",
                     f"Excel dosyası kaydedilemedi:\n{str(e)}"
                 )

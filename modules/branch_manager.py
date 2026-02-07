@@ -1,11 +1,12 @@
 import tkinter as tk
-from tkinter import ttk, messagebox
+from tkinter import ttk
 import sys
 import os
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from database import create_branch, get_all_branches
+from modules.ui_helpers import show_warning
 
 class BranchManagerDialog:
     def __init__(self, parent, callback):
@@ -18,6 +19,7 @@ class BranchManagerDialog:
         self.dialog.configure(bg="#f5f7fb")
         self.dialog.transient(parent)
         self.dialog.grab_set()
+        self.dialog.bind("<Escape>", lambda e: self.dialog.destroy())
         
         self.create_widgets()
     
@@ -39,6 +41,8 @@ class BranchManagerDialog:
             text="➕ Şube Oluştur",
             command=self.create_new_branch
         ).grid(row=2, columnspan=2, pady=10)
+
+        self.dialog.bind("<Return>", lambda e: self.create_new_branch())
         
         # Alt çerçeve - Mevcut şubeler
         list_frame = ttk.LabelFrame(self.dialog, text="Mevcut Şubeler", padding=12)
@@ -87,7 +91,7 @@ class BranchManagerDialog:
         address = self.address_entry.get("1.0", tk.END).strip()
         
         if not name:
-            messagebox.showwarning("Eksik Bilgi", "Şube adı zorunludur!")
+            show_warning(self.dialog, "Eksik Bilgi", "Şube adı zorunludur!")
             return
         
         branch_id = create_branch(name, address)
@@ -117,7 +121,7 @@ class BranchManagerDialog:
         """Seçili şubeyi ana uygulamaya gönderir"""
         selection = self.tree.selection()
         if not selection:
-            messagebox.showwarning("Seçim Yok", "Lütfen bir şube seçin!")
+            show_warning(self.dialog, "Seçim Yok", "Lütfen bir şube seçin!")
             return
         
         branch_data = {

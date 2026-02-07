@@ -1,6 +1,6 @@
 # main.py
 import tkinter as tk
-from tkinter import ttk, messagebox
+from tkinter import ttk
 import sys
 import os
 
@@ -10,6 +10,7 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from database import initialize_database, get_all_branches
 from modules.branch_manager import BranchManagerDialog
 from modules.stock_tab import StockTab
+from modules.ui_helpers import show_toast
 
 class BusinessManagerApp:
     def __init__(self, root):
@@ -94,10 +95,7 @@ class BusinessManagerApp:
     def set_branch(self, branch_data):
         """Seçilen şubeyi ayarlar ve ana ekranı yükler"""
         self.current_branch = branch_data
-        messagebox.showinfo(
-            "Şube Seçildi", 
-            f"'{branch_data['name']}' şubesi aktif hale getirildi."
-        )
+        show_toast(self.root, f"'{branch_data['name']}' şubesi aktif hale getirildi.")
         self.load_main_interface()
     
     def load_main_interface(self):
@@ -161,6 +159,7 @@ class BusinessManagerApp:
         style.configure("Section.TLabel", font=("Segoe UI Semibold", 12), foreground="#0f172a")
         style.configure("Body.TLabel", font=("Segoe UI", 11), foreground="#0f172a", background="#ffffff")
         style.configure("Topbar.TLabel", background="#0f172a", foreground="#ffffff", font=("Segoe UI Semibold", 11))
+        style.configure("Empty.TLabel", font=("Segoe UI", 10), foreground="#94a3b8")
 
         style.configure("Primary.TButton", font=("Segoe UI Semibold", 10), padding=(14, 8),
                         background="#2563eb", foreground="#ffffff")
@@ -176,6 +175,10 @@ class BusinessManagerApp:
 
         style.configure("TNotebook", background="#f5f7fb", borderwidth=0)
         style.configure("TNotebook.Tab", padding=(12, 8), font=("Segoe UI Semibold", 10))
+        style.configure("Treeview", background="#ffffff", fieldbackground="#ffffff", rowheight=28)
+        style.map("Treeview", background=[("selected", "#dbeafe")], foreground=[("selected", "#1e3a8a")])
+        style.configure("Treeview.Heading", font=("Segoe UI Semibold", 10), background="#e2e8f0", foreground="#0f172a")
+        style.map("Treeview.Heading", background=[("active", "#cbd5f5")])
         
 
 def main():

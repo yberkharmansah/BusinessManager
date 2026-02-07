@@ -1,6 +1,6 @@
 # modules/finance_tab.py
 import tkinter as tk
-from tkinter import ttk, messagebox, filedialog
+from tkinter import ttk, filedialog
 from datetime import datetime, timedelta
 import sys
 import os
@@ -11,6 +11,7 @@ from database import (
     add_transaction, get_transactions, get_daily_total, get_period_summary,
     update_transaction, delete_transaction, get_transaction_stats, fetch_one
 )
+from modules.ui_helpers import show_info, show_warning, show_error, ask_confirm, show_toast
 
 class FinanceTab:
     def __init__(self, parent, branch_id):
@@ -147,6 +148,9 @@ class FinanceTab:
             self.tree.column(col, width=width, anchor="center" if col != "Description" else "w")
         
         self.tree.pack(fill=tk.BOTH, expand=True)
+
+        self.empty_label = ttk.Label(list_frame, text="Henüz işlem yok. İlk işlemi ekleyin.", style="Empty.TLabel")
+        self.empty_label.place(relx=0.5, rely=0.5, anchor="center")
         
         # Sağ tık menüsü
         self.context_menu = tk.Menu(self.tree, tearoff=0)
@@ -172,7 +176,7 @@ class FinanceTab:
         try:
             amount = float(self.amount_entry.get())
         except ValueError:
-            messagebox.showwarning("Hatalı Değer", "Miktar sayısal olmalı!")
+            show_warning(self.parent, "Hatalı Değer", "Miktar sayısal olmalı!")
             return
         
         trans_type = self.trans_type.get()
@@ -184,18 +188,18 @@ class FinanceTab:
         try:
             datetime.strptime(date, "%Y-%m-%d")
         except ValueError:
-            messagebox.showwarning("Hatalı Tarih", "Tarih formatı: YYYY-MM-DD")
+            show_warning(self.parent, "Hatalı Tarih", "Tarih formatı: YYYY-MM-DD")
             return
         
         trans_id = add_transaction(self.branch_id, trans_type, amount, payment, date, description)
         
         if trans_id:
-            messagebox.showinfo("Başarılı", "İşlem kaydedildi!")
+            show_toast(self.parent, "İşlem kaydedildi!")
             self.clear_form()
             self.load_transactions()
             self.update_summary()
         else:
-            messagebox.showerror("Hata", "İşlem kaydedilemedi!")
+            show_error(self.parent, "Hata", "İşlem kaydedilemedi!")
     
     def clear_form(self):
         """Formu temizle"""
@@ -240,6 +244,11 @@ class FinanceTab:
                 total -= trans['amount']
         
         self.total_label.config(text=f"Toplam: ₺{total:.2f}")
+
+        if len(self.tree.get_children()) == 0:
+            self.empty_label.place(relx=0.5, rely=0.5, anchor="center")
+        else:
+            self.empty_label.place_forget()
     
     def apply_filters(self):
         """Filtreleri uygula"""
@@ -272,7 +281,7 @@ class FinanceTab:
         """İşlem düzenle"""
         selection = self.tree.selection()
         if not selection:
-            messagebox.showwarning("Seçim Yok", "Lütfen bir işlem seçin!")
+            show_warning(self.parent, "Seçim Yok", "Lütfen bir işlem seçin!")
             return
         
         values = self.tree.item(selection[0])['values']
@@ -289,6 +298,7 @@ class FinanceTab:
         dialog.configure(bg="#f5f7fb")
         dialog.transient(self.parent)
         dialog.grab_set()
+        dialog.bind("<Escape>", lambda e: dialog.destroy())
         
         # Form
         ttk.Label(dialog, text="İşlem Türü:").pack(pady=5)
@@ -329,6 +339,13 @@ class FinanceTab:
         
         ttk.Button(button_frame, text="❌ İptal", command=dialog.destroy
                  ).pack(side=tk.LEFT, padx=10)
+
+        dialog.bind(
+            "<Return>",
+            lambda e: self.save_edited_transaction(
+                dialog, trans_id, trans_type, amount_entry, payment_var, date_entry, desc_entry
+            ),
+        )
     
     def save_edited_transaction(self, dialog, trans_id, trans_type, amount_entry, 
                                payment_var, date_entry, desc_entry):
@@ -336,7 +353,7 @@ class FinanceTab:
         try:
             amount = float(amount_entry.get())
         except ValueError:
-            messagebox.showwarning("Hatalı Değer", "Miktar sayısal olmalı!")
+            show_warning(dialog, "Hatalı Değer", "Miktar sayısal olmalı!")
             return
         
         trans_type_val = trans_type.get()
@@ -348,37 +365,37 @@ class FinanceTab:
         try:
             datetime.strptime(date, "%Y-%m-%d")
         except ValueError:
-            messagebox.showwarning("Hatalı Tarih", "Tarih formatı: YYYY-MM-DD")
+            show_warning(dialog, "Hatalı Tarih", "Tarih formatı: YYYY-MM-DD")
             return
         
         success = update_transaction(trans_id, trans_type_val, amount, payment, date, description)
         
         if success:
-            messagebox.showinfo("Başarılı", "İşlem güncellendi!")
+            show_toast(self.parent, "İşlem güncellendi!")
             dialog.destroy()
             self.load_transactions()
             self.update_summary()
         else:
-            messagebox.showerror("Hata", "İşlem güncellenemedi!")
+            show_error(dialog, "Hata", "İşlem güncellenemedi!")
     
     def delete_transaction(self):
         """İşlem sil"""
         selection = self.tree.selection()
         if not selection:
-            messagebox.showwarning("Seçim Yok", "Lütfen bir işlem seçin!")
+            show_warning(self.parent, "Seçim Yok", "Lütfen bir işlem seçin!")
             return
         
         values = self.tree.item(selection[0])['values']
         trans_id = values[0]
         
-        if messagebox.askyesno("Silme Onayı", "Bu işlemi silmek istediğinize emin misiniz?"):
+        if ask_confirm(self.parent, "Silme Onayı", "Bu işlemi silmek istediğinize emin misiniz?"):
             success = delete_transaction(trans_id)
             if success:
-                messagebox.showinfo("Başarılı", "İşlem silindi!")
+                show_toast(self.parent, "İşlem silindi!")
                 self.load_transactions()
                 self.update_summary()
             else:
-                messagebox.showerror("Hata", "İşlem silinemedi!")
+                show_error(self.parent, "Hata", "İşlem silinemedi!")
     
     def show_details(self):
         """İşlem detayları"""
@@ -399,6 +416,7 @@ class FinanceTab:
         dialog.configure(bg="#f5f7fb")
         dialog.transient(self.parent)
         dialog.grab_set()
+        dialog.bind("<Escape>", lambda e: dialog.destroy())
         
         text = tk.Text(dialog, height=10, width=50, font=("Segoe UI", 10), relief="solid", borderwidth=1)
         text.pack(pady=10, padx=10)
@@ -460,6 +478,7 @@ Kategori: {trans['category'] or 'Yok'}
         dialog.configure(bg="#f5f7fb")
         dialog.transient(self.parent)
         dialog.grab_set()
+        dialog.bind("<Escape>", lambda e: dialog.destroy())
         
         ttk.Label(dialog, text="Başlangıç Tarihi:").pack(pady=5)
         start_entry = ttk.Entry(dialog, width=12)
@@ -479,6 +498,11 @@ Kategori: {trans['category'] or 'Yok'}
                                                          start_entry.get(), end_entry.get()),
                                dialog.destroy()]
                  ).pack()
+
+        dialog.bind(
+            "<Return>",
+            lambda e: [self.show_period_report("Özel Aralık Raporu", start_entry.get(), end_entry.get()), dialog.destroy()],
+        )
     
     def show_period_report(self, title, start_date, end_date):
         """Tarih aralığı raporu"""
@@ -487,7 +511,7 @@ Kategori: {trans['category'] or 'Yok'}
             datetime.strptime(start_date, "%Y-%m-%d")
             datetime.strptime(end_date, "%Y-%m-%d")
         except ValueError:
-            messagebox.showwarning("Hatalı Tarih", "Tarih formatı: YYYY-MM-DD")
+            show_warning(self.parent, "Hatalı Tarih", "Tarih formatı: YYYY-MM-DD")
             return
         
         summary = get_period_summary(self.branch_id, start_date, end_date)
@@ -499,6 +523,7 @@ Kategori: {trans['category'] or 'Yok'}
         dialog.configure(bg="#f5f7fb")
         dialog.transient(self.parent)
         dialog.grab_set()
+        dialog.bind("<Escape>", lambda e: dialog.destroy())
         
         main_frame = ttk.Frame(dialog)
         main_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
@@ -561,7 +586,7 @@ Kategori: {trans['category'] or 'Yok'}
             from openpyxl import Workbook
             from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
         except ImportError:
-            messagebox.showerror("Eksik Kütüphane", "pip install openpyxl")
+            show_error(self.parent, "Eksik Kütüphane", "pip install openpyxl")
             return
 
         # Mevcut filtreleri al
@@ -577,7 +602,7 @@ Kategori: {trans['category'] or 'Yok'}
         transactions = get_transactions(self.branch_id, **filters)
 
         if not transactions:
-            messagebox.showinfo("Bilgi", "Aktarılacak işlem bulunmuyor!")
+            show_info(self.parent, "Bilgi", "Aktarılacak işlem bulunmuyor!")
             return
 
         wb = Workbook()
@@ -664,4 +689,4 @@ Kategori: {trans['category'] or 'Yok'}
 
         if file_path:
             wb.save(file_path)
-            messagebox.showinfo("✅ Başarılı", f"Excel dosyası kaydedildi:\n{file_path}")
+            show_info(self.parent, "✅ Başarılı", f"Excel dosyası kaydedildi:\n{file_path}")

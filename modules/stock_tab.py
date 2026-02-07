@@ -1,6 +1,6 @@
 # modules/stock_tab.py
 import tkinter as tk
-from tkinter import ttk, messagebox
+from tkinter import ttk
 from datetime import datetime
 import sys
 import os
@@ -13,6 +13,7 @@ from database import (
 )
 
 from modules.stock_reports import StockReportsDialog
+from modules.ui_helpers import show_info, show_warning, show_error, ask_confirm, show_toast
 
 class StockTab:
     def __init__(self, parent, branch_id):
@@ -47,20 +48,16 @@ class StockTab:
             command=self.load_products
         ).pack(side=tk.LEFT, padx=10)
 
-        tk.Button(
+        ttk.Button(
             top_frame,
             text="📈 Stok Ekle",
-            command=self.increase_stock,
-            bg="#2e7d32",
-            fg="white"
+            command=self.increase_stock
         ).pack(side=tk.LEFT, padx=5)
 
-        tk.Button(
+        ttk.Button(
             top_frame,
             text="📉 Stok Azalt",
-            command=self.decrease_stock,
-            bg="#c62828",
-            fg="white"
+            command=self.decrease_stock
         ).pack(side=tk.LEFT, padx=5)
         
         # Butonlar
@@ -116,9 +113,12 @@ class StockTab:
             self.tree.column(col_id, width=width, anchor=anchor)
         
         self.tree.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
-        
+
         y_scroll.config(command=self.tree.yview)
         x_scroll.config(command=self.tree.xview)
+
+        self.empty_label = ttk.Label(list_frame, text="Henüz ürün yok. Yeni ürün ekleyin.", style="Empty.TLabel")
+        self.empty_label.place(relx=0.5, rely=0.5, anchor="center")
         
         # Sağ tık menüsü
         self.context_menu = tk.Menu(self.tree, tearoff=0)
@@ -240,6 +240,11 @@ class StockTab:
         
         # Bilgi etiketini güncelle
         self.info_label.config(text=f"Toplam Ürün: {count} | Düşük Stok: {low_stock_count}")
+
+        if count == 0:
+            self.empty_label.place(relx=0.5, rely=0.5, anchor="center")
+        else:
+            self.empty_label.place_forget()
         
         # Renk ayarları
         self.tree.tag_configure('low_stock', background='#ffebee', foreground='#c62828')
@@ -263,6 +268,7 @@ class StockTab:
         dialog.configure(bg="#f5f7fb")
         dialog.transient(self.parent)
         dialog.grab_set()
+        dialog.bind("<Escape>", lambda e: dialog.destroy())
         
         # Form alanları
         fields = [
@@ -305,6 +311,8 @@ class StockTab:
             text="❌ İptal",
             command=dialog.destroy
         ).pack(side=tk.LEFT, padx=10)
+
+        dialog.bind("<Return>", lambda e: self.save_product(dialog, entries))
     
     def save_product(self, dialog, entries):
         """Ürünü kaydeder"""
@@ -316,11 +324,11 @@ class StockTab:
             min_stock = int(entries['min_stock'].get())
             unit_price = float(entries['unit_price'].get() or 0)
         except ValueError:
-            messagebox.showwarning("Hatalı Değer", "Miktar, min stok ve fiyat sayısal olmalı!")
+            show_warning(dialog, "Hatalı Değer", "Miktar, min stok ve fiyat sayısal olmalı!")
             return
         
         if not name:
-            messagebox.showwarning("Eksik Bilgi", "Ürün adı zorunludur!")
+            show_warning(dialog, "Eksik Bilgi", "Ürün adı zorunludur!")
             return
         
         # Ürünü ekle
@@ -334,11 +342,11 @@ class StockTab:
         )
         
         if product_id:
-            messagebox.showinfo("Başarılı", f"Ürün eklendi: {name}")
+            show_toast(self.parent, f"Ürün eklendi: {name}")
             dialog.destroy()
             self.load_products()
         else:
-            messagebox.showerror("Hata", "Ürün eklenemedi!")
+            show_error(dialog, "Hata", "Ürün eklenemedi!")
     
     def increase_stock(self):
         """Stok artırma"""
@@ -352,7 +360,7 @@ class StockTab:
         """Stok değişikliği penceresi"""
         selection = self.tree.selection()
         if not selection:
-            messagebox.showwarning("Seçim Yok", "Lütfen bir ürün seçin!")
+            show_warning(self.parent, "Seçim Yok", "Lütfen bir ürün seçin!")
             return
         
         product_id = self.tree.item(selection[0])['values'][0]
@@ -365,6 +373,7 @@ class StockTab:
         dialog.configure(bg="#f5f7fb")
         dialog.transient(self.parent)
         dialog.grab_set()
+        dialog.bind("<Escape>", lambda e: dialog.destroy())
         
         # Bilgi
         ttk.Label(dialog, text=f"Ürün: {product_name}").pack(pady=10)
@@ -398,6 +407,13 @@ class StockTab:
             text="İptal",
             command=dialog.destroy
         ).pack(side=tk.LEFT, padx=10)
+
+        dialog.bind(
+            "<Return>",
+            lambda e: self.apply_stock_change(
+                dialog, product_id, move_type, qty_spinbox, note_text, current_qty
+            ),
+        )
     
     def apply_stock_change(self, dialog, product_id, move_type, qty_widget, note_widget, old_qty):
         """Stok değişikliğini uygular"""
@@ -406,7 +422,7 @@ class StockTab:
             note = note_widget.get("1.0", tk.END).strip()
             
             if quantity <= 0:
-                messagebox.showwarning("Hatalı Miktar", "Miktar 0'dan büyük olmalı!")
+                show_warning(dialog, "Hatalı Miktar", "Miktar 0'dan büyük olmalı!")
                 return
             
             # Stok güncelle
@@ -414,30 +430,27 @@ class StockTab:
             
             if new_qty is not None:
                 action_text = "eklendi" if move_type == "IN" else "azaltıldı"
-                messagebox.showinfo(
-                    "Başarılı",
-                    f"Stok {action_text}!\nYeni miktar: {new_qty}"
-                )
+                show_toast(self.parent, f"Stok {action_text}! Yeni miktar: {new_qty}")
                 dialog.destroy()
                 self.load_products()
             else:
-                messagebox.showerror("Hata", "Stok güncellenemedi!")
+                show_error(dialog, "Hata", "Stok güncellenemedi!")
         
         except ValueError:
-            messagebox.showwarning("Hatalı Değer", "Miktar sayısal olmalı!")
+            show_warning(dialog, "Hatalı Değer", "Miktar sayısal olmalı!")
     
     def edit_product(self):
         """✏️ Ürün düzenleme"""
         selection = self.tree.selection()
         if not selection:
-            messagebox.showwarning("Seçim Yok", "Lütfen bir ürün seçin!")
+            show_warning(self.parent, "Seçim Yok", "Lütfen bir ürün seçin!")
             return
         
         product_id = self.tree.item(selection[0])['values'][0]
         product = fetch_one("SELECT * FROM products WHERE id = ?", (product_id,))
         
         if not product:
-            messagebox.showerror("Hata", "Ürün bulunamadı!")
+            show_error(self.parent, "Hata", "Ürün bulunamadı!")
             return
         
         dialog = tk.Toplevel(self.parent)
@@ -446,6 +459,7 @@ class StockTab:
         dialog.configure(bg="#f5f7fb")
         dialog.transient(self.parent)
         dialog.grab_set()
+        dialog.bind("<Escape>", lambda e: dialog.destroy())
         
         # Form alanları
         fields = [
@@ -502,6 +516,8 @@ class StockTab:
             text="❌ İptal",
             command=dialog.destroy
         ).pack(side=tk.LEFT, padx=10)
+
+        dialog.bind("<Return>", lambda e: self.save_edited_product(dialog, product_id, entries))
     
     def save_edited_product(self, dialog, product_id, entries):
         """Düzenlenmiş ürünü kaydeder"""
@@ -512,41 +528,41 @@ class StockTab:
             min_stock = int(entries['min_stock'].get())
             unit_price = float(entries['unit_price'].get() or 0)
         except ValueError:
-            messagebox.showwarning("Hatalı Değer", "Min stok ve fiyat sayısal olmalı!")
+            show_warning(dialog, "Hatalı Değer", "Min stok ve fiyat sayısal olmalı!")
             return
         
         if not name:
-            messagebox.showwarning("Eksik Bilgi", "Ürün adı zorunludur!")
+            show_warning(dialog, "Eksik Bilgi", "Ürün adı zorunludur!")
             return
         
         success = update_product_info(product_id, name, barcode, min_stock, unit_price)
         
         if success:
-            messagebox.showinfo("Başarılı", f"Ürün güncellendi: {name}")
+            show_toast(self.parent, f"Ürün güncellendi: {name}")
             dialog.destroy()
             self.load_products()
         else:
-            messagebox.showerror("Hata", "Ürün güncellenemedi!")
+            show_error(dialog, "Hata", "Ürün güncellenemedi!")
     
     def delete_product(self):
         """Ürün silme"""
         selection = self.tree.selection()
         if not selection:
-            messagebox.showwarning("Seçim Yok", "Lütfen bir ürün seçin!")
+            show_warning(self.parent, "Seçim Yok", "Lütfen bir ürün seçin!")
             return
 
         product_id = self.tree.item(selection[0])['values'][0]
         product_name = self.tree.item(selection[0])['values'][1]
 
-        if not messagebox.askyesno("Silme Onayı", f"'{product_name}' ürününü silmek istiyor musunuz?"):
+        if not ask_confirm(self.parent, "Silme Onayı", f"'{product_name}' ürününü silmek istiyor musunuz?"):
             return
 
         success = delete_product(product_id)
         if success:
-            messagebox.showinfo("Başarılı", f"Ürün silindi: {product_name}")
+            show_toast(self.parent, f"Ürün silindi: {product_name}")
             self.load_products()
         else:
-            messagebox.showerror("Hata", "Ürün silinemedi!")
+            show_error(self.parent, "Hata", "Ürün silinemedi!")
     
     def open_stock_reports(self):
         """Stok raporları penceresini açar"""

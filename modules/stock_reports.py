@@ -1,6 +1,6 @@
 # modules/stock_reports.py
 import tkinter as tk
-from tkinter import ttk, messagebox, filedialog
+from tkinter import ttk, filedialog
 from datetime import datetime, timedelta
 import sys
 import os
@@ -8,6 +8,7 @@ import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from database import get_all_products, get_stock_movements_report
+from modules.ui_helpers import show_info, show_warning, show_error
 
 class StockReportsDialog:
     def __init__(self, parent, branch_id):
@@ -20,6 +21,7 @@ class StockReportsDialog:
         self.dialog.configure(bg="#f5f7fb")
         self.dialog.transient(parent)
         self.dialog.grab_set()
+        self.dialog.bind("<Escape>", lambda e: self.dialog.destroy())
         
         self.create_widgets()
         self.load_report()
@@ -156,7 +158,7 @@ class StockReportsDialog:
             datetime.strptime(start_date, "%Y-%m-%d")
             datetime.strptime(end_date, "%Y-%m-%d")
         except ValueError:
-            messagebox.showwarning("Hatalı Tarih", "Tarih formatı: YYYY-MM-DD")
+            show_warning(self.dialog, "Hatalı Tarih", "Tarih formatı: YYYY-MM-DD")
             return
         
         # Seçili ürün
@@ -260,7 +262,8 @@ class StockReportsDialog:
             from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
             from openpyxl.utils import get_column_letter
         except ImportError:
-            messagebox.showerror(
+            show_error(
+                self.dialog,
                 "Eksik Kütüphane",
                 "Excel aktarma için 'openpyxl' kütüphanesi gereklidir.\n\n"
                 "pip install openpyxl"
@@ -282,7 +285,7 @@ class StockReportsDialog:
         )
         
         if not movements:
-            messagebox.showinfo("Bilgi", "Aktarılacak veri bulunamadı!")
+            show_info(self.dialog, "Bilgi", "Aktarılacak veri bulunamadı!")
             return
         
         # Excel oluştur
@@ -376,13 +379,15 @@ class StockReportsDialog:
         if file_path:
             try:
                 wb.save(file_path)
-                messagebox.showinfo(
-                    "✅ Başarılı", 
+                show_info(
+                    self.dialog,
+                    "✅ Başarılı",
                     f"Excel dosyası kaydedildi:\n{file_path}\n\n"
                     f"📊 Toplam {len(movements)} kayıt aktarıldı."
                 )
             except Exception as e:
-                messagebox.showerror(
+                show_error(
+                    self.dialog,
                     "❌ Hata",
                     f"Excel dosyası kaydedilemedi:\n{str(e)}"
                 )
