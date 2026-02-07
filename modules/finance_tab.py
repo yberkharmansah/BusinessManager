@@ -23,28 +23,28 @@ class FinanceTab:
     
     def create_widgets(self):
         # Üst çerçeve - Kontroller
-        top_frame = tk.Frame(self.parent)
-        top_frame.pack(fill=tk.X, padx=10, pady=10)
+        top_frame = ttk.Frame(self.parent)
+        top_frame.pack(fill=tk.X, padx=16, pady=12)
         
         # Sol taraf - Hızlı Ekleme
-        left_frame = tk.Frame(top_frame)
+        left_frame = ttk.Frame(top_frame)
         left_frame.pack(side=tk.LEFT, fill=tk.Y, padx=(0, 20))
         
-        tk.Label(left_frame, text="💰 Hızlı İşlem Ekle", font=("Arial", 12, "bold")).pack(pady=5)
+        ttk.Label(left_frame, text="💰 Hızlı İşlem Ekle").pack(pady=5)
         
         # İşlem türü
-        tk.Label(left_frame, text="Tür:").pack()
+        ttk.Label(left_frame, text="Tür:").pack()
         self.trans_type = tk.StringVar(value="GELIR")
-        tk.Radiobutton(left_frame, text="Gelir", variable=self.trans_type, value="GELIR", bg="#e8f5e9").pack()
-        tk.Radiobutton(left_frame, text="Gider", variable=self.trans_type, value="GIDER", bg="#ffebee").pack()
+        ttk.Radiobutton(left_frame, text="Gelir", variable=self.trans_type, value="GELIR").pack()
+        ttk.Radiobutton(left_frame, text="Gider", variable=self.trans_type, value="GIDER").pack()
         
         # Miktar
-        tk.Label(left_frame, text="Miktar:").pack(pady=(10, 0))
-        self.amount_entry = tk.Entry(left_frame, width=15, font=("Arial", 11))
+        ttk.Label(left_frame, text="Miktar:").pack(pady=(10, 0))
+        self.amount_entry = ttk.Entry(left_frame, width=15)
         self.amount_entry.pack()
         
         # Ödeme yöntemi
-        tk.Label(left_frame, text="Ödeme:").pack(pady=(10, 0))
+        ttk.Label(left_frame, text="Ödeme:").pack(pady=(10, 0))
         self.payment_var = tk.StringVar(value="NAKIT")
         payment_combo = ttk.Combobox(left_frame, textvariable=self.payment_var, 
                                     values=["NAKIT", "KREDI", "BANKA", "DIGER"], 
@@ -52,66 +52,60 @@ class FinanceTab:
         payment_combo.pack()
         
         # Tarih
-        tk.Label(left_frame, text="Tarih:").pack(pady=(10, 0))
-        self.date_entry = tk.Entry(left_frame, width=15, font=("Arial", 11))
+        ttk.Label(left_frame, text="Tarih:").pack(pady=(10, 0))
+        self.date_entry = ttk.Entry(left_frame, width=15)
         self.date_entry.insert(0, datetime.now().strftime("%Y-%m-%d"))
         self.date_entry.pack()
         
         # Açıklama
-        tk.Label(left_frame, text="Açıklama:").pack(pady=(10, 0))
-        self.desc_entry = tk.Text(left_frame, height=3, width=20)
+        ttk.Label(left_frame, text="Açıklama:").pack(pady=(10, 0))
+        self.desc_entry = tk.Text(left_frame, height=3, width=20, relief="solid", borderwidth=1)
         self.desc_entry.pack()
         
         # Ekle butonu
-        tk.Button(left_frame, text="➕ Ekle", command=self.add_transaction,
-                 bg="#4CAF50", fg="white", font=("Arial", 10, "bold")).pack(pady=10)
+        ttk.Button(left_frame, text="➕ Ekle", command=self.add_transaction).pack(pady=10)
         
         # Sağ taraf - Kontroller
-        right_frame = tk.Frame(top_frame)
+        right_frame = ttk.Frame(top_frame)
         right_frame.pack(side=tk.RIGHT, fill=tk.Y)
         
         # Rapor butonları
-        tk.Label(right_frame, text="📊 Raporlar", font=("Arial", 12, "bold")).pack(pady=5)
+        ttk.Label(right_frame, text="📊 Raporlar").pack(pady=5)
         
-        tk.Button(right_frame, text="Günlük Rapor", command=self.show_daily_report,
-                 bg="#2196F3", fg="white", width=15).pack(pady=2)
-        tk.Button(right_frame, text="Haftalık Rapor", command=self.show_weekly_report,
-                 bg="#FF9800", fg="white", width=15).pack(pady=2)
-        tk.Button(right_frame, text="Aylık Rapor", command=self.show_monthly_report,
-                 bg="#9C27B0", fg="white", width=15).pack(pady=2)
-        tk.Button(right_frame, text="Özel Aralık", command=self.show_custom_range,
-                 bg="#607D8B", fg="white", width=15).pack(pady=2)
-        tk.Button(right_frame, text="📈 Excel'e Aktar", command=self.export_to_excel,
-                 bg="#4CAF50", fg="white", width=15).pack(pady=2)
+        ttk.Button(right_frame, text="Günlük Rapor", command=self.show_daily_report).pack(pady=2, fill=tk.X)
+        ttk.Button(right_frame, text="Haftalık Rapor", command=self.show_weekly_report).pack(pady=2, fill=tk.X)
+        ttk.Button(right_frame, text="Aylık Rapor", command=self.show_monthly_report).pack(pady=2, fill=tk.X)
+        ttk.Button(right_frame, text="Özel Aralık", command=self.show_custom_range).pack(pady=2, fill=tk.X)
+        ttk.Button(right_frame, text="📈 Excel'e Aktar", command=self.export_to_excel).pack(pady=2, fill=tk.X)
         
         # Orta kısım - Özet
-        middle_frame = tk.Frame(top_frame)
+        middle_frame = ttk.Frame(top_frame)
         middle_frame.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=20)
         
-        self.summary_frame = tk.LabelFrame(middle_frame, text="📈 Güncel Özet", padx=10, pady=10)
+        self.summary_frame = ttk.LabelFrame(middle_frame, text="📈 Güncel Özet", padding=10)
         self.summary_frame.pack(fill=tk.BOTH, expand=True)
         
         self.summary_labels = {}
         for key, text in [('income', 'Günlük Gelir'), ('expense', 'Günlük Gider'), ('net', 'Net Kâr')]:
-            frame = tk.Frame(self.summary_frame)
+            frame = ttk.Frame(self.summary_frame)
             frame.pack(fill=tk.X, pady=5)
-            tk.Label(frame, text=f"{text}:", font=("Arial", 11, "bold")).pack(side=tk.LEFT)
-            self.summary_labels[key] = tk.Label(frame, text="₺0.00", font=("Arial", 11))
+            ttk.Label(frame, text=f"{text}:").pack(side=tk.LEFT)
+            self.summary_labels[key] = ttk.Label(frame, text="₺0.00")
             self.summary_labels[key].pack(side=tk.RIGHT)
         
         # Orta çerçeve - İşlem listesi
-        list_frame = tk.Frame(self.parent)
-        list_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+        list_frame = ttk.Frame(self.parent)
+        list_frame.pack(fill=tk.BOTH, expand=True, padx=16, pady=12)
         
         # Üst kontroller
-        control_frame = tk.Frame(list_frame)
+        control_frame = ttk.Frame(list_frame)
         control_frame.pack(fill=tk.X, pady=5)
         
         # Arama ve filtreleme
-        tk.Label(control_frame, text="🔍 Ara:").pack(side=tk.LEFT)
+        ttk.Label(control_frame, text="🔍 Ara:").pack(side=tk.LEFT)
         self.search_var = tk.StringVar()
         self.search_var.trace("w", self.on_search_change)
-        tk.Entry(control_frame, textvariable=self.search_var, width=20).pack(side=tk.LEFT, padx=5)
+        ttk.Entry(control_frame, textvariable=self.search_var, width=20).pack(side=tk.LEFT, padx=5)
         
         # Filtreler
         self.filter_type = tk.StringVar(value="Tümü")
@@ -128,18 +122,17 @@ class FinanceTab:
         payment_combo.bind("<<ComboboxSelected>>", lambda e: self.apply_filters())
         
         # Tarih aralığı
-        tk.Label(control_frame, text="Tarih:").pack(side=tk.LEFT, padx=(20, 5))
-        self.start_date = tk.Entry(control_frame, width=10)
+        ttk.Label(control_frame, text="Tarih:").pack(side=tk.LEFT, padx=(20, 5))
+        self.start_date = ttk.Entry(control_frame, width=10)
         self.start_date.insert(0, datetime.now().strftime("%Y-%m-%d"))
         self.start_date.pack(side=tk.LEFT)
         
-        tk.Label(control_frame, text="-").pack(side=tk.LEFT)
-        self.end_date = tk.Entry(control_frame, width=10)
+        ttk.Label(control_frame, text="-").pack(side=tk.LEFT)
+        self.end_date = ttk.Entry(control_frame, width=10)
         self.end_date.insert(0, datetime.now().strftime("%Y-%m-%d"))
         self.end_date.pack(side=tk.LEFT)
         
-        tk.Button(control_frame, text="🔍 Uygula", command=self.apply_filters,
-                 bg="#2196F3", fg="white").pack(side=tk.LEFT, padx=5)
+        ttk.Button(control_frame, text="🔍 Uygula", command=self.apply_filters).pack(side=tk.LEFT, padx=5)
         
         # Treeview
         self.tree = ttk.Treeview(list_frame, columns=("ID", "Date", "Type", "Amount", "Payment", "Description"), 
@@ -166,14 +159,13 @@ class FinanceTab:
         self.tree.bind("<Double-1>", lambda e: self.edit_transaction())
         
         # Alt toplam
-        bottom_frame = tk.Frame(self.parent)
-        bottom_frame.pack(fill=tk.X, padx=10, pady=10)
+        bottom_frame = ttk.Frame(self.parent)
+        bottom_frame.pack(fill=tk.X, padx=16, pady=12)
         
-        self.total_label = tk.Label(bottom_frame, text="Toplam: ₺0.00", font=("Arial", 12, "bold"))
+        self.total_label = ttk.Label(bottom_frame, text="Toplam: ₺0.00")
         self.total_label.pack(side=tk.LEFT)
         
-        tk.Button(bottom_frame, text="🔄 Yenile", command=self.refresh_all,
-                 bg="#9E9E9E", fg="white").pack(side=tk.RIGHT)
+        ttk.Button(bottom_frame, text="🔄 Yenile", command=self.refresh_all).pack(side=tk.RIGHT)
     
     def add_transaction(self):
         """Yeni işlem ekle"""
@@ -294,48 +286,49 @@ class FinanceTab:
         dialog = tk.Toplevel(self.parent)
         dialog.title("✏️ İşlem Düzenle")
         dialog.geometry("400x500")
+        dialog.configure(bg="#f5f7fb")
         dialog.transient(self.parent)
         dialog.grab_set()
         
         # Form
-        tk.Label(dialog, text="İşlem Türü:").pack(pady=5)
+        ttk.Label(dialog, text="İşlem Türü:").pack(pady=5)
         trans_type = tk.StringVar(value=trans['type'])
-        tk.Radiobutton(dialog, text="Gelir", variable=trans_type, value="GELIR").pack()
-        tk.Radiobutton(dialog, text="Gider", variable=trans_type, value="GIDER").pack()
+        ttk.Radiobutton(dialog, text="Gelir", variable=trans_type, value="GELIR").pack()
+        ttk.Radiobutton(dialog, text="Gider", variable=trans_type, value="GIDER").pack()
         
-        tk.Label(dialog, text="Miktar:").pack(pady=5)
-        amount_entry = tk.Entry(dialog, width=20, font=("Arial", 11))
+        ttk.Label(dialog, text="Miktar:").pack(pady=5)
+        amount_entry = ttk.Entry(dialog, width=20)
         amount_entry.insert(0, trans['amount'])
         amount_entry.pack()
         
-        tk.Label(dialog, text="Ödeme Yöntemi:").pack(pady=5)
+        ttk.Label(dialog, text="Ödeme Yöntemi:").pack(pady=5)
         payment_var = tk.StringVar(value=trans['payment_method'])
         payment_combo = ttk.Combobox(dialog, textvariable=payment_var, 
                                     values=["NAKIT", "KREDI", "BANKA", "DIGER"], 
                                     state="readonly", width=18)
         payment_combo.pack()
         
-        tk.Label(dialog, text="Tarih:").pack(pady=5)
-        date_entry = tk.Entry(dialog, width=20, font=("Arial", 11))
+        ttk.Label(dialog, text="Tarih:").pack(pady=5)
+        date_entry = ttk.Entry(dialog, width=20)
         date_entry.insert(0, trans['date'][:10])
         date_entry.pack()
         
-        tk.Label(dialog, text="Açıklama:").pack(pady=5)
-        desc_entry = tk.Text(dialog, height=5, width=40)
+        ttk.Label(dialog, text="Açıklama:").pack(pady=5)
+        desc_entry = tk.Text(dialog, height=5, width=40, relief="solid", borderwidth=1)
         desc_entry.insert(tk.END, trans['description'] or "")
         desc_entry.pack()
         
         # Butonlar
-        button_frame = tk.Frame(dialog)
+        button_frame = ttk.Frame(dialog)
         button_frame.pack(pady=20)
         
-        tk.Button(button_frame, text="💾 Kaydet", 
+        ttk.Button(button_frame, text="💾 Kaydet", 
                  command=lambda: self.save_edited_transaction(dialog, trans_id, trans_type, amount_entry, 
-                                                           payment_var, date_entry, desc_entry),
-                 bg="#4CAF50", fg="white", font=("Arial", 10, "bold")).pack(side=tk.LEFT, padx=10)
+                                                          payment_var, date_entry, desc_entry)
+                 ).pack(side=tk.LEFT, padx=10)
         
-        tk.Button(button_frame, text="❌ İptal", command=dialog.destroy,
-                 bg="#f44336", fg="white", font=("Arial", 10, "bold")).pack(side=tk.LEFT, padx=10)
+        ttk.Button(button_frame, text="❌ İptal", command=dialog.destroy
+                 ).pack(side=tk.LEFT, padx=10)
     
     def save_edited_transaction(self, dialog, trans_id, trans_type, amount_entry, 
                                payment_var, date_entry, desc_entry):
@@ -403,10 +396,11 @@ class FinanceTab:
         dialog = tk.Toplevel(self.parent)
         dialog.title("📋 İşlem Detayı")
         dialog.geometry("400x300")
+        dialog.configure(bg="#f5f7fb")
         dialog.transient(self.parent)
         dialog.grab_set()
         
-        text = tk.Text(dialog, height=10, width=50, font=("Arial", 10))
+        text = tk.Text(dialog, height=10, width=50, font=("Segoe UI", 10), relief="solid", borderwidth=1)
         text.pack(pady=10, padx=10)
         
         details = f"""
@@ -425,8 +419,7 @@ Kategori: {trans['category'] or 'Yok'}
         text.insert(tk.END, details)
         text.config(state=tk.DISABLED)
         
-        tk.Button(dialog, text="✅ Tamam", command=dialog.destroy,
-                 bg="#4CAF50", fg="white").pack(pady=10)
+        ttk.Button(dialog, text="✅ Tamam", command=dialog.destroy).pack(pady=10)
     
     def update_summary(self):
         """Günlük özet güncelle"""
@@ -464,27 +457,28 @@ Kategori: {trans['category'] or 'Yok'}
         dialog = tk.Toplevel(self.parent)
         dialog.title("📅 Özel Tarih Aralığı")
         dialog.geometry("300x200")
+        dialog.configure(bg="#f5f7fb")
         dialog.transient(self.parent)
         dialog.grab_set()
         
-        tk.Label(dialog, text="Başlangıç Tarihi:").pack(pady=5)
-        start_entry = tk.Entry(dialog, width=12)
+        ttk.Label(dialog, text="Başlangıç Tarihi:").pack(pady=5)
+        start_entry = ttk.Entry(dialog, width=12)
         start_entry.insert(0, datetime.now().strftime("%Y-%m-%d"))
         start_entry.pack()
         
-        tk.Label(dialog, text="Bitiş Tarihi:").pack(pady=5)
-        end_entry = tk.Entry(dialog, width=12)
+        ttk.Label(dialog, text="Bitiş Tarihi:").pack(pady=5)
+        end_entry = ttk.Entry(dialog, width=12)
         end_entry.insert(0, datetime.now().strftime("%Y-%m-%d"))
         end_entry.pack()
         
-        button_frame = tk.Frame(dialog)
+        button_frame = ttk.Frame(dialog)
         button_frame.pack(pady=20)
         
-        tk.Button(button_frame, text="📊 Rapor Göster",
+        ttk.Button(button_frame, text="📊 Rapor Göster",
                  command=lambda: [self.show_period_report("Özel Aralık Raporu", 
                                                          start_entry.get(), end_entry.get()),
-                               dialog.destroy()],
-                 bg="#4CAF50", fg="white", font=("Arial", 10, "bold")).pack()
+                               dialog.destroy()]
+                 ).pack()
     
     def show_period_report(self, title, start_date, end_date):
         """Tarih aralığı raporu"""
@@ -502,14 +496,15 @@ Kategori: {trans['category'] or 'Yok'}
         dialog = tk.Toplevel(self.parent)
         dialog.title(f"📊 {title}")
         dialog.geometry("900x600")
+        dialog.configure(bg="#f5f7fb")
         dialog.transient(self.parent)
         dialog.grab_set()
         
-        main_frame = tk.Frame(dialog)
+        main_frame = ttk.Frame(dialog)
         main_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
         
         # Üst özet
-        summary_frame = tk.LabelFrame(main_frame, text=f"📈 {title} Özeti ({start_date} - {end_date})")
+        summary_frame = ttk.LabelFrame(main_frame, text=f"📈 {title} Özeti ({start_date} - {end_date})")
         summary_frame.pack(fill=tk.X, pady=10)
         
         for key, text, color in [('income', 'Toplam Gelir', '#2e7d32'),
@@ -518,12 +513,12 @@ Kategori: {trans['category'] or 'Yok'}
                                 ('count', 'İşlem Sayısı', '#607D8B')]:
             val = summary[key]
             display = f"₺{val:.2f}" if key != 'count' else str(int(val))
-            tk.Label(summary_frame, 
+            ttk.Label(summary_frame, 
                     text=f"{text}: {display}",
-                    font=("Arial", 12, "bold"), fg=color).pack(pady=5)
+                    foreground=color).pack(pady=5)
         
         # Liste
-        list_frame = tk.Frame(main_frame)
+        list_frame = ttk.Frame(main_frame)
         list_frame.pack(fill=tk.BOTH, expand=True, pady=10)
         
         y_scroll = tk.Scrollbar(list_frame)
@@ -555,11 +550,10 @@ Kategori: {trans['category'] or 'Yok'}
             total += trans['amount'] if trans['type'] == 'GELIR' else -trans['amount']
         
         # Alt toplam
-        tk.Label(main_frame, text=f"💰 Net Toplam: ₺{total:.2f}",
-                font=("Arial", 12, "bold"), fg="#1565c0").pack(pady=10)
+        ttk.Label(main_frame, text=f"💰 Net Toplam: ₺{total:.2f}",
+                foreground="#1565c0").pack(pady=10)
         
-        tk.Button(main_frame, text="✅ Tamam", command=dialog.destroy,
-                 bg="#4CAF50", fg="white", font=("Arial", 10, "bold")).pack(pady=10)
+        ttk.Button(main_frame, text="✅ Tamam", command=dialog.destroy).pack(pady=10)
     
     def export_to_excel(self):
         """Excel raporu oluştur – HATASIZ"""

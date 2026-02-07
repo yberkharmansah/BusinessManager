@@ -1,7 +1,7 @@
 # modules/supplier_tab.py
 import tkinter as tk
 from tkinter import ttk, messagebox, filedialog
-from datetime import datetime
+from datetime import datetime, timedelta
 import sys
 import os
 
@@ -29,46 +29,37 @@ class SupplierTab:
     
     def create_widgets(self):
         # Üst çerçeve - Toptancı Yönetimi
-        supplier_frame = tk.LabelFrame(self.parent, text="🤝 Toptancı Yönetimi", padx=10, pady=10)
-        supplier_frame.pack(fill=tk.X, padx=10, pady=10)
+        supplier_frame = ttk.LabelFrame(self.parent, text="🤝 Toptancı Yönetimi", padding=12)
+        supplier_frame.pack(fill=tk.X, padx=16, pady=12)
         
         # Toptancı Butonları
-        tk.Button(
+        ttk.Button(
             supplier_frame,
             text="➕ Toptancı Ekle",
-            command=self.add_supplier_dialog,
-            bg="#4CAF50",
-            fg="white",
-            font=("Arial", 10, "bold")
+            command=self.add_supplier_dialog
         ).pack(side=tk.LEFT, padx=5)
         
-        tk.Button(
+        ttk.Button(
             supplier_frame,
             text="⚠️ Yaklaşan Ödemeler",
-            command=self.show_due_payments,
-            bg="#f44336",
-            fg="white",
-            font=("Arial", 10, "bold")
+            command=self.show_due_payments
         ).pack(side=tk.LEFT, padx=5)
         
-        tk.Button(
+        ttk.Button(
             supplier_frame,
             text="📊 Excel Raporu",
-            command=self.export_to_excel,
-            bg="#2196F3",
-            fg="white",
-            font=("Arial", 10, "bold")
+            command=self.export_to_excel
         ).pack(side=tk.RIGHT, padx=5)
         
         # Toptancı Listesi
-        list_frame = tk.Frame(self.parent)
-        list_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=5)
+        list_frame = ttk.Frame(self.parent)
+        list_frame.pack(fill=tk.BOTH, expand=True, padx=16, pady=8)
         
         # Sol panel - Toptancılar
-        left_panel = tk.Frame(list_frame)
+        left_panel = ttk.Frame(list_frame)
         left_panel.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         
-        tk.Label(left_panel, text="📋 Toptancı Listesi", font=("Arial", 12, "bold")).pack(pady=5)
+        ttk.Label(left_panel, text="📋 Toptancı Listesi").pack(pady=6)
         
         # Scrollbar
         scroll_y = tk.Scrollbar(left_panel)
@@ -113,10 +104,10 @@ class SupplierTab:
         self.supplier_tree.bind("<Double-1>", lambda e: self.edit_supplier())
         
         # Sağ panel - Bakiyeler
-        right_panel = tk.Frame(list_frame)
+        right_panel = ttk.Frame(list_frame)
         right_panel.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True, padx=(10, 0))
         
-        tk.Label(right_panel, text="💰 Güncel Bakiyeler", font=("Arial", 12, "bold")).pack(pady=5)
+        ttk.Label(right_panel, text="💰 Güncel Bakiyeler").pack(pady=6)
         
         # Scrollbar
         scroll_y2 = tk.Scrollbar(right_panel)
@@ -161,18 +152,16 @@ class SupplierTab:
         self.balance_tree.bind("<Button-3>", self.show_balance_menu)
         
         # Alt çerçeve - Bilgi
-        bottom_frame = tk.Frame(self.parent)
-        bottom_frame.pack(fill=tk.X, padx=10, pady=10)
+        bottom_frame = ttk.Frame(self.parent)
+        bottom_frame.pack(fill=tk.X, padx=16, pady=12)
         
-        self.info_label = tk.Label(bottom_frame, text="Toptancı: 0 | Aktif Bakiye: 0 | Gecikmiş: 0", font=("Arial", 10))
+        self.info_label = ttk.Label(bottom_frame, text="Toptancı: 0 | Aktif Bakiye: 0 | Gecikmiş: 0")
         self.info_label.pack(side=tk.LEFT)
         
-        tk.Button(
+        ttk.Button(
             bottom_frame,
             text="🔄 Yenile",
-            command=lambda: [self.load_suppliers(), self.load_balances()],
-            bg="#9E9E9E",
-            fg="white"
+            command=lambda: [self.load_suppliers(), self.load_balances()]
         ).pack(side=tk.RIGHT)
     
     def sort_supplier(self, col):
@@ -316,47 +305,42 @@ class SupplierTab:
         dialog = tk.Toplevel(self.parent)
         dialog.title("➕ Yeni Toptancı Ekle")
         dialog.geometry("400x450")
+        dialog.configure(bg="#f5f7fb")
         dialog.transient(self.parent)
         dialog.grab_set()
         
         # Form
-        tk.Label(dialog, text="Toptancı Adı *:").pack(pady=5)
-        name_entry = tk.Entry(dialog, width=30, font=("Arial", 11))
+        ttk.Label(dialog, text="Toptancı Adı *:").pack(pady=5)
+        name_entry = ttk.Entry(dialog, width=30)
         name_entry.pack()
         
-        tk.Label(dialog, text="Türü * (Örn: Meşrubat, Süt, Yemek):").pack(pady=5)
-        type_entry = tk.Entry(dialog, width=30, font=("Arial", 11))  # TEXTBOX OLDU!
+        ttk.Label(dialog, text="Türü * (Örn: Meşrubat, Süt, Yemek):").pack(pady=5)
+        type_entry = ttk.Entry(dialog, width=30)  # TEXTBOX OLDU!
         type_entry.insert(0, "Meşrubat")  # Varsayılan
         type_entry.pack()
         
-        tk.Label(dialog, text="Telefon:").pack(pady=5)
-        phone_entry = tk.Entry(dialog, width=30, font=("Arial", 11))
+        ttk.Label(dialog, text="Telefon:").pack(pady=5)
+        phone_entry = ttk.Entry(dialog, width=30)
         phone_entry.pack()
         
-        tk.Label(dialog, text="E-posta:").pack(pady=5)
-        email_entry = tk.Entry(dialog, width=30, font=("Arial", 11))
+        ttk.Label(dialog, text="E-posta:").pack(pady=5)
+        email_entry = ttk.Entry(dialog, width=30)
         email_entry.pack()
         
         # Butonlar
-        button_frame = tk.Frame(dialog)
+        button_frame = ttk.Frame(dialog)
         button_frame.pack(pady=20)
         
-        tk.Button(
+        ttk.Button(
             button_frame,
             text="💾 Kaydet",
-            command=lambda: self.save_supplier(dialog, name_entry, type_entry, phone_entry, email_entry),
-            bg="#4CAF50",
-            fg="white",
-            font=("Arial", 10, "bold")
+            command=lambda: self.save_supplier(dialog, name_entry, type_entry, phone_entry, email_entry)
         ).pack(side=tk.LEFT, padx=10)
         
-        tk.Button(
+        ttk.Button(
             button_frame,
             text="❌ İptal",
-            command=dialog.destroy,
-            bg="#f44336",
-            fg="white",
-            font=("Arial", 10, "bold")
+            command=dialog.destroy
         ).pack(side=tk.LEFT, padx=10)
     
     def save_supplier(self, dialog, name_entry, type_entry, phone_entry, email_entry):
@@ -395,50 +379,45 @@ class SupplierTab:
         dialog = tk.Toplevel(self.parent)
         dialog.title(f"✏️ Toptancı Düzenle: {supplier['name']}")
         dialog.geometry("400x450")
+        dialog.configure(bg="#f5f7fb")
         dialog.transient(self.parent)
         dialog.grab_set()
         
         # Form
-        tk.Label(dialog, text="Toptancı Adı *:").pack(pady=5)
-        name_entry = tk.Entry(dialog, width=30, font=("Arial", 11))
+        ttk.Label(dialog, text="Toptancı Adı *:").pack(pady=5)
+        name_entry = ttk.Entry(dialog, width=30)
         name_entry.insert(0, supplier['name'])
         name_entry.pack()
         
-        tk.Label(dialog, text="Türü * (Örn: Meşrubat, Süt, Yemek):").pack(pady=5)
-        type_entry = tk.Entry(dialog, width=30, font=("Arial", 11))  # TEXTBOX OLDU!
+        ttk.Label(dialog, text="Türü * (Örn: Meşrubat, Süt, Yemek):").pack(pady=5)
+        type_entry = ttk.Entry(dialog, width=30)  # TEXTBOX OLDU!
         type_entry.insert(0, supplier['supplier_type'])
         type_entry.pack()
         
-        tk.Label(dialog, text="Telefon:").pack(pady=5)
-        phone_entry = tk.Entry(dialog, width=30, font=("Arial", 11))
+        ttk.Label(dialog, text="Telefon:").pack(pady=5)
+        phone_entry = ttk.Entry(dialog, width=30)
         phone_entry.insert(0, supplier['phone'] or "")
         phone_entry.pack()
         
-        tk.Label(dialog, text="E-posta:").pack(pady=5)
-        email_entry = tk.Entry(dialog, width=30, font=("Arial", 11))
+        ttk.Label(dialog, text="E-posta:").pack(pady=5)
+        email_entry = ttk.Entry(dialog, width=30)
         email_entry.insert(0, supplier['email'] or "")
         email_entry.pack()
         
         # Butonlar
-        button_frame = tk.Frame(dialog)
+        button_frame = ttk.Frame(dialog)
         button_frame.pack(pady=20)
         
-        tk.Button(
+        ttk.Button(
             button_frame,
             text="💾 Güncelle",
-            command=lambda: self.save_edited_supplier(dialog, supplier_id, name_entry, type_entry, phone_entry, email_entry),
-            bg="#4CAF50",
-            fg="white",
-            font=("Arial", 10, "bold")
+            command=lambda: self.save_edited_supplier(dialog, supplier_id, name_entry, type_entry, phone_entry, email_entry)
         ).pack(side=tk.LEFT, padx=10)
         
-        tk.Button(
+        ttk.Button(
             button_frame,
             text="❌ İptal",
-            command=dialog.destroy,
-            bg="#f44336",
-            fg="white",
-            font=("Arial", 10, "bold")
+            command=dialog.destroy
         ).pack(side=tk.LEFT, padx=10)
     
     def save_edited_supplier(self, dialog, supplier_id, name_entry, type_entry, phone_entry, email_entry):
@@ -496,45 +475,40 @@ class SupplierTab:
         dialog = tk.Toplevel(self.parent)
         dialog.title(f"💵 Ödeme Yap: {supplier['name']}")
         dialog.geometry("400x350")
+        dialog.configure(bg="#f5f7fb")
         dialog.transient(self.parent)
         dialog.grab_set()
         
-        tk.Label(dialog, text=f"Toptancı: {supplier['name']}", font=("Arial", 11, "bold")).pack(pady=10)
-        tk.Label(dialog, text=f"Mevcut Borç: ₺{abs(current_balance):.2f}", font=("Arial", 10)).pack()
+        ttk.Label(dialog, text=f"Toptancı: {supplier['name']}").pack(pady=10)
+        ttk.Label(dialog, text=f"Mevcut Borç: ₺{abs(current_balance):.2f}").pack()
         
-        tk.Label(dialog, text="Ödeme Tutarı:").pack(pady=10)
-        amount_entry = tk.Entry(dialog, width=20, font=("Arial", 12))
+        ttk.Label(dialog, text="Ödeme Tutarı:").pack(pady=10)
+        amount_entry = ttk.Entry(dialog, width=20)
         amount_entry.pack()
         
-        tk.Label(dialog, text="Tarih:").pack(pady=5)
-        date_entry = tk.Entry(dialog, width=20, font=("Arial", 11))
+        ttk.Label(dialog, text="Tarih:").pack(pady=5)
+        date_entry = ttk.Entry(dialog, width=20)
         date_entry.insert(0, datetime.now().strftime("%Y-%m-%d"))
         date_entry.pack()
         
-        tk.Label(dialog, text="Açıklama:").pack(pady=5)
-        desc_text = tk.Text(dialog, height=3, width=40)
+        ttk.Label(dialog, text="Açıklama:").pack(pady=5)
+        desc_text = tk.Text(dialog, height=3, width=40, relief="solid", borderwidth=1)
         desc_text.insert(tk.END, "Ödeme yapıldı")
         desc_text.pack()
         
-        button_frame = tk.Frame(dialog)
+        button_frame = ttk.Frame(dialog)
         button_frame.pack(pady=20)
         
-        tk.Button(
+        ttk.Button(
             button_frame,
             text="💵 Ödeme Yap",
-            command=lambda: self.process_smart_payment(dialog, self.selected_supplier_id, amount_entry, date_entry, desc_text, current_balance),
-            bg="#4CAF50",
-            fg="white",
-            font=("Arial", 10, "bold")
+            command=lambda: self.process_smart_payment(dialog, self.selected_supplier_id, amount_entry, date_entry, desc_text, current_balance)
         ).pack(side=tk.LEFT, padx=10)
         
-        tk.Button(
+        ttk.Button(
             button_frame,
             text="❌ İptal",
-            command=dialog.destroy,
-            bg="#f44336",
-            fg="white",
-            font=("Arial", 10, "bold")
+            command=dialog.destroy
         ).pack(side=tk.LEFT, padx=10)
     
     def process_smart_payment(self, dialog, supplier_id, amount_entry, date_entry, desc_text, current_balance):
@@ -606,55 +580,50 @@ class SupplierTab:
         dialog = tk.Toplevel(self.parent)
         dialog.title(f"➕ {transaction_type} Ekle: {supplier['name']}")
         dialog.geometry("400x450")
+        dialog.configure(bg="#f5f7fb")
         dialog.transient(self.parent)
         dialog.grab_set()
         
-        tk.Label(dialog, text=f"Toptancı: {supplier['name']}", font=("Arial", 11, "bold")).pack(pady=10)
-        tk.Label(dialog, text=f"Mevcut Bakiye: ₺{current_balance:.2f}", font=("Arial", 10)).pack()
+        ttk.Label(dialog, text=f"Toptancı: {supplier['name']}").pack(pady=10)
+        ttk.Label(dialog, text=f"Mevcut Bakiye: ₺{current_balance:.2f}").pack()
         
         # İşlem türü seçimi
-        tk.Label(dialog, text="İşlem Türü:").pack(pady=5)
+        ttk.Label(dialog, text="İşlem Türü:").pack(pady=5)
         type_combo = ttk.Combobox(dialog, values=["BORC", "ALACAK"], state="readonly", width=28)
         type_combo.set(transaction_type)
         type_combo.pack()
         
-        tk.Label(dialog, text="Tutar:").pack(pady=5)
-        amount_entry = tk.Entry(dialog, width=20, font=("Arial", 12))
+        ttk.Label(dialog, text="Tutar:").pack(pady=5)
+        amount_entry = ttk.Entry(dialog, width=20)
         amount_entry.pack()
         
-        tk.Label(dialog, text="Tarih:").pack(pady=5)
-        date_entry = tk.Entry(dialog, width=20, font=("Arial", 11))
+        ttk.Label(dialog, text="Tarih:").pack(pady=5)
+        date_entry = ttk.Entry(dialog, width=20)
         date_entry.insert(0, datetime.now().strftime("%Y-%m-%d"))
         date_entry.pack()
         
-        tk.Label(dialog, text="Vade Tarihi (isteğe bağlı):").pack(pady=5)
-        due_date_entry = tk.Entry(dialog, width=20, font=("Arial", 11))
+        ttk.Label(dialog, text="Vade Tarihi (isteğe bağlı):").pack(pady=5)
+        due_date_entry = ttk.Entry(dialog, width=20)
         due_date_entry.pack()
         
-        tk.Label(dialog, text="Açıklama:").pack(pady=5)
-        desc_text = tk.Text(dialog, height=3, width=40)
+        ttk.Label(dialog, text="Açıklama:").pack(pady=5)
+        desc_text = tk.Text(dialog, height=3, width=40, relief="solid", borderwidth=1)
         desc_text.insert(tk.END, f"{transaction_type} eklendi")
         desc_text.pack()
         
-        button_frame = tk.Frame(dialog)
+        button_frame = ttk.Frame(dialog)
         button_frame.pack(pady=20)
         
-        tk.Button(
+        ttk.Button(
             button_frame,
             text="💾 Kaydet",
-            command=lambda: self.save_balance_transaction(dialog, supplier['id'], type_combo, amount_entry, date_entry, due_date_entry, desc_text),
-            bg="#4CAF50",
-            fg="white",
-            font=("Arial", 10, "bold")
+            command=lambda: self.save_balance_transaction(dialog, supplier['id'], type_combo, amount_entry, date_entry, due_date_entry, desc_text)
         ).pack(side=tk.LEFT, padx=10)
         
-        tk.Button(
+        ttk.Button(
             button_frame,
             text="❌ İptal",
-            command=dialog.destroy,
-            bg="#f44336",
-            fg="white",
-            font=("Arial", 10, "bold")
+            command=dialog.destroy
         ).pack(side=tk.LEFT, padx=10)
     
     def save_balance_transaction(self, dialog, supplier_id, type_combo, amount_entry, date_entry, due_date_entry, desc_text):
@@ -711,22 +680,12 @@ class SupplierTab:
         values = self.balance_tree.item(selection[0])['values']
         
         # Sadece BORÇ bakiyelerde ödeme yapılabilir
-        if values[2] != "BORC":
+        if values[3] != "BORC":
             messagebox.showinfo("Bilgi", "Sadece borç bakiyelerde ödeme yapılabilir!")
             return
         
-        balance_id = fetch_one("""
-            SELECT sb.id 
-            FROM supplier_balances sb
-            JOIN suppliers sup ON sb.supplier_id = sup.id
-            WHERE sup.name = ? AND sb.date = ? AND sb.type = 'BORC'
-            ORDER BY sb.id DESC LIMIT 1
-        """, (values[1], values[0]))['id']
-        
-        if not balance_id:
-            return
-        
-        self.payment_from_selected_balance(balance_id, values[1])
+        balance_id = values[0]
+        self.payment_from_selected_balance(balance_id, values[2])
     
     def payment_from_selected_balance(self, balance_id, supplier_name):
         """Seçili bakiye için ödeme yap"""
@@ -736,47 +695,42 @@ class SupplierTab:
         dialog = tk.Toplevel(self.parent)
         dialog.title(f"💵 Ödeme Yap: {supplier_name}")
         dialog.geometry("400x350")
+        dialog.configure(bg="#f5f7fb")
         dialog.transient(self.parent)
         dialog.grab_set()
         
-        tk.Label(dialog, text=f"Toptancı: {supplier_name}", font=("Arial", 11, "bold")).pack(pady=10)
-        tk.Label(dialog, text=f"Borç Tutarı: ₺{balance['amount']:.2f}", font=("Arial", 10)).pack()
-        tk.Label(dialog, text=f"Mevcut Toplam Bakiye: ₺{current_balance:.2f}", font=("Arial", 10)).pack()
+        ttk.Label(dialog, text=f"Toptancı: {supplier_name}").pack(pady=10)
+        ttk.Label(dialog, text=f"Borç Tutarı: ₺{balance['amount']:.2f}").pack()
+        ttk.Label(dialog, text=f"Mevcut Toplam Bakiye: ₺{current_balance:.2f}").pack()
         
-        tk.Label(dialog, text="Ödeme Tutarı:").pack(pady=10)
-        amount_entry = tk.Entry(dialog, width=20, font=("Arial", 12))
+        ttk.Label(dialog, text="Ödeme Tutarı:").pack(pady=10)
+        amount_entry = ttk.Entry(dialog, width=20)
         amount_entry.insert(0, str(balance['amount']))  # Varsayılan tam ödeme
         amount_entry.pack()
         
-        tk.Label(dialog, text="Tarih:").pack(pady=5)
-        date_entry = tk.Entry(dialog, width=20, font=("Arial", 11))
+        ttk.Label(dialog, text="Tarih:").pack(pady=5)
+        date_entry = ttk.Entry(dialog, width=20)
         date_entry.insert(0, datetime.now().strftime("%Y-%m-%d"))
         date_entry.pack()
         
-        tk.Label(dialog, text="Açıklama:").pack(pady=5)
-        desc_text = tk.Text(dialog, height=3, width=40)
+        ttk.Label(dialog, text="Açıklama:").pack(pady=5)
+        desc_text = tk.Text(dialog, height=3, width=40, relief="solid", borderwidth=1)
         desc_text.insert(tk.END, "Ödeme yapıldı")
         desc_text.pack()
         
-        button_frame = tk.Frame(dialog)
+        button_frame = ttk.Frame(dialog)
         button_frame.pack(pady=20)
         
-        tk.Button(
+        ttk.Button(
             button_frame,
             text="💵 Ödeme Yap",
-            command=lambda: self.process_smart_payment(dialog, balance['supplier_id'], amount_entry, date_entry, desc_text, current_balance),
-            bg="#4CAF50",
-            fg="white",
-            font=("Arial", 10, "bold")
+            command=lambda: self.process_smart_payment(dialog, balance['supplier_id'], amount_entry, date_entry, desc_text, current_balance)
         ).pack(side=tk.LEFT, padx=10)
         
-        tk.Button(
+        ttk.Button(
             button_frame,
             text="❌ İptal",
-            command=dialog.destroy,
-            bg="#f44336",
-            fg="white",
-            font=("Arial", 10, "bold")
+            command=dialog.destroy
         ).pack(side=tk.LEFT, padx=10)
     
     def update_balance_status(self):
@@ -792,33 +746,28 @@ class SupplierTab:
         dialog = tk.Toplevel(self.parent)
         dialog.title("🔄 Durum Güncelle")
         dialog.geometry("300x150")
+        dialog.configure(bg="#f5f7fb")
         dialog.transient(self.parent)
         dialog.grab_set()
         
-        tk.Label(dialog, text="Yeni Durum:").pack(pady=10)
+        ttk.Label(dialog, text="Yeni Durum:").pack(pady=10)
         status_combo = ttk.Combobox(dialog, values=["AKTIF", "ODENDI", "GECIKMIS"], state="readonly")
         status_combo.set(values[6])  # Mevcut durumu göster
         status_combo.pack()
         
-        button_frame = tk.Frame(dialog)
+        button_frame = ttk.Frame(dialog)
         button_frame.pack(pady=20)
         
-        tk.Button(
+        ttk.Button(
             button_frame,
             text="💾 Güncelle",
-            command=lambda: self.save_status(dialog, balance_id, status_combo),
-            bg="#4CAF50",
-            fg="white",
-            font=("Arial", 10, "bold")
+            command=lambda: self.save_status(dialog, balance_id, status_combo)
         ).pack(side=tk.LEFT, padx=10)
         
-        tk.Button(
+        ttk.Button(
             button_frame,
             text="❌ İptal",
-            command=dialog.destroy,
-            bg="#f44336",
-            fg="white",
-            font=("Arial", 10, "bold")
+            command=dialog.destroy
         ).pack(side=tk.LEFT, padx=10)
     
     def save_status(self, dialog, balance_id, status_combo):
@@ -902,11 +851,12 @@ class SupplierTab:
         dialog = tk.Toplevel(self.parent)
         dialog.title(f"📋 Bakiye Detayı")
         dialog.geometry("500x300")
+        dialog.configure(bg="#f5f7fb")
         dialog.transient(self.parent)
         dialog.grab_set()
         
         # Detayları göster
-        text_widget = tk.Text(dialog, height=10, width=60, font=("Arial", 10))
+        text_widget = tk.Text(dialog, height=10, width=60, font=("Segoe UI", 10), relief="solid", borderwidth=1)
         text_widget.pack(pady=10, padx=10)
         
         details = f"""
@@ -928,7 +878,7 @@ Açıklama: {values[7] or 'Yok'}
         text_widget.insert(tk.END, details)
         text_widget.config(state=tk.DISABLED)
         
-        tk.Button(dialog, text="✅ Tamam", command=dialog.destroy, bg="#4CAF50", fg="white").pack(pady=10)
+        ttk.Button(dialog, text="✅ Tamam", command=dialog.destroy).pack(pady=10)
     
     def show_due_payments(self):
         """Yaklaşan ödemeler – vadesiz kayıtlara takılmaz"""
@@ -944,16 +894,16 @@ Açıklama: {values[7] or 'Yok'}
             dialog = tk.Toplevel(self.parent)
             dialog.title("⚠️ Yaklaşan Ödemeler (7 Gün)")
             dialog.geometry("800x500")
+            dialog.configure(bg="#f5f7fb")
             dialog.transient(self.parent)
             dialog.grab_set()
 
-            main_frame = tk.Frame(dialog)
+            main_frame = ttk.Frame(dialog)
             main_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
 
-            tk.Label(main_frame, text="⚠️ Yaklaşan Ödemeler (7 Gün İçinde)",
-                     font=("Arial", 14, "bold"), fg="#d32f2f").pack(pady=10)
+            ttk.Label(main_frame, text="⚠️ Yaklaşan Ödemeler (7 Gün İçinde)").pack(pady=10)
 
-            tree_frame = tk.Frame(main_frame)
+            tree_frame = ttk.Frame(main_frame)
             tree_frame.pack(fill=tk.BOTH, expand=True, pady=10)
 
             y_scroll = tk.Scrollbar(tree_frame)
@@ -1007,10 +957,8 @@ Açıklama: {values[7] or 'Yok'}
                               ('active', '#e8f5e9', '#2e7d32')]:
                 tree.tag_configure(t, background=bg, foreground=fg)
 
-            tk.Label(main_frame, text=f"💰 Toplam Tutar: ₺{total_amount:.2f}",
-                     font=("Arial", 12, "bold")).pack(pady=10)
-            tk.Button(main_frame, text="✅ Tamam", command=dialog.destroy,
-                     bg="#4CAF50", fg="white", font=("Arial", 10, "bold")).pack(pady=10)
+            ttk.Label(main_frame, text=f"💰 Toplam Tutar: ₺{total_amount:.2f}").pack(pady=10)
+            ttk.Button(main_frame, text="✅ Tamam", command=dialog.destroy).pack(pady=10)
 
         except Exception as e:
             messagebox.showerror("Hata", f"Yaklaşan ödemeler getirilirken hata oluştu:\n{str(e)}")

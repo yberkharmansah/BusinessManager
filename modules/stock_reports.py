@@ -17,6 +17,7 @@ class StockReportsDialog:
         self.dialog = tk.Toplevel(parent)
         self.dialog.title("📊 Stok Hareket Raporları")
         self.dialog.geometry("1000x650")
+        self.dialog.configure(bg="#f5f7fb")
         self.dialog.transient(parent)
         self.dialog.grab_set()
         
@@ -25,62 +26,56 @@ class StockReportsDialog:
     
     def create_widgets(self):
         # Üst çerçeve - Filtreler
-        filter_frame = tk.LabelFrame(self.dialog, text="Filtreler", padx=10, pady=10)
-        filter_frame.pack(fill=tk.X, padx=10, pady=10)
+        filter_frame = ttk.LabelFrame(self.dialog, text="Filtreler", padding=10)
+        filter_frame.pack(fill=tk.X, padx=16, pady=12)
         
         # Tarih aralığı
-        tk.Label(filter_frame, text="Başlangıç:").grid(row=0, column=0, padx=5, pady=5)
-        self.start_date = tk.Entry(filter_frame, width=12)
+        ttk.Label(filter_frame, text="Başlangıç:").grid(row=0, column=0, padx=5, pady=5)
+        self.start_date = ttk.Entry(filter_frame, width=12)
         self.start_date.insert(0, (datetime.now() - timedelta(days=30)).strftime("%Y-%m-%d"))
         self.start_date.grid(row=0, column=1, padx=5, pady=5)
         
-        tk.Label(filter_frame, text="Bitiş:").grid(row=0, column=2, padx=5, pady=5)
-        self.end_date = tk.Entry(filter_frame, width=12)
+        ttk.Label(filter_frame, text="Bitiş:").grid(row=0, column=2, padx=5, pady=5)
+        self.end_date = ttk.Entry(filter_frame, width=12)
         self.end_date.insert(0, datetime.now().strftime("%Y-%m-%d"))
         self.end_date.grid(row=0, column=3, padx=5, pady=5)
         
         # Ürün seçimi
-        tk.Label(filter_frame, text="Ürün:").grid(row=0, column=4, padx=5, pady=5)
+        ttk.Label(filter_frame, text="Ürün:").grid(row=0, column=4, padx=5, pady=5)
         self.product_combo = ttk.Combobox(filter_frame, width=25, state="readonly")
         self.product_combo.grid(row=0, column=5, padx=5, pady=5)
         
         self.load_products_combo()
         
         # Butonlar
-        tk.Button(
+        ttk.Button(
             filter_frame,
             text="🔍 Uygula",
-            command=self.load_report,
-            bg="#2196F3",
-            fg="white",
-            font=("Arial", 10, "bold")
+            command=self.load_report
         ).grid(row=0, column=6, padx=10)
         
-        tk.Button(
+        ttk.Button(
             filter_frame,
             text="📊 Excel'e Aktar",
-            command=self.export_to_excel,
-            bg="#4CAF50",
-            fg="white",
-            font=("Arial", 10, "bold")
+            command=self.export_to_excel
         ).grid(row=0, column=7, padx=5)
         
         # İstatistik çerçevesi
-        stats_frame = tk.Frame(filter_frame)
+        stats_frame = ttk.Frame(filter_frame)
         stats_frame.grid(row=1, column=0, columnspan=8, sticky="w", pady=(10, 0))
         
-        self.total_movements_label = tk.Label(stats_frame, text="Toplam Hareket: 0", font=("Arial", 10, "bold"))
+        self.total_movements_label = ttk.Label(stats_frame, text="Toplam Hareket: 0")
         self.total_movements_label.pack(side=tk.LEFT, padx=10)
         
-        self.total_in_label = tk.Label(stats_frame, text="Giriş: 0", font=("Arial", 10), fg="#4CAF50")
+        self.total_in_label = ttk.Label(stats_frame, text="Giriş: 0")
         self.total_in_label.pack(side=tk.LEFT, padx=10)
         
-        self.total_out_label = tk.Label(stats_frame, text="Çıkış: 0", font=("Arial", 10), fg="#c62828")
+        self.total_out_label = ttk.Label(stats_frame, text="Çıkış: 0")
         self.total_out_label.pack(side=tk.LEFT, padx=10)
         
         # Orta çerçeve - Rapor tablosu
-        list_frame = tk.Frame(self.dialog)
-        list_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+        list_frame = ttk.Frame(self.dialog)
+        list_frame.pack(fill=tk.BOTH, expand=True, padx=16, pady=12)
         
         # Scrollbar'lar
         y_scroll = tk.Scrollbar(list_frame)
@@ -124,18 +119,17 @@ class StockReportsDialog:
         x_scroll.config(command=self.tree.xview)
         
         # Alt çerçeve - Özet
-        summary_frame = tk.LabelFrame(self.dialog, text="Özet", padx=10, pady=10)
-        summary_frame.pack(fill=tk.X, padx=10, pady=10)
+        summary_frame = ttk.LabelFrame(self.dialog, text="Özet", padding=10)
+        summary_frame.pack(fill=tk.X, padx=16, pady=12)
         
-        self.summary_text = tk.Text(summary_frame, height=5, font=("Arial", 9), wrap=tk.WORD)
+        self.summary_text = tk.Text(summary_frame, height=5, font=("Segoe UI", 9), wrap=tk.WORD, relief="solid", borderwidth=1)
         self.summary_text.pack(fill=tk.X)
         
         # Not
-        tk.Label(
+        ttk.Label(
             summary_frame,
             text="💡 Not: Miktar değişiklikleri için stok ekle/çıkar kullanın.",
-            font=("Arial", 8, "italic"),
-            fg="gray"
+            foreground="#64748b"
         ).pack(pady=(5, 0))
     
     def load_products_combo(self):

@@ -15,6 +15,7 @@ class BranchManagerDialog:
         self.dialog = tk.Toplevel(parent)
         self.dialog.title("Şube Yönetimi")
         self.dialog.geometry("500x400")
+        self.dialog.configure(bg="#f5f7fb")
         self.dialog.transient(parent)
         self.dialog.grab_set()
         
@@ -22,28 +23,26 @@ class BranchManagerDialog:
     
     def create_widgets(self):
         # Üst çerçeve - Yeni şube ekleme
-        add_frame = tk.LabelFrame(self.dialog, text="Yeni Şube Oluştur", padx=10, pady=10)
-        add_frame.pack(fill=tk.X, padx=10, pady=10)
+        add_frame = ttk.LabelFrame(self.dialog, text="Yeni Şube Oluştur", padding=12)
+        add_frame.pack(fill=tk.X, padx=12, pady=12)
         
-        tk.Label(add_frame, text="Şube Adı *:").grid(row=0, column=0, sticky="w", pady=5)
-        self.name_entry = tk.Entry(add_frame, width=30)
+        ttk.Label(add_frame, text="Şube Adı *:").grid(row=0, column=0, sticky="w", pady=6)
+        self.name_entry = ttk.Entry(add_frame, width=30)
         self.name_entry.grid(row=0, column=1, padx=5, pady=5)
         
-        tk.Label(add_frame, text="Adres:").grid(row=1, column=0, sticky="w", pady=5)
-        self.address_entry = tk.Text(add_frame, width=30, height=3)
+        ttk.Label(add_frame, text="Adres:").grid(row=1, column=0, sticky="w", pady=6)
+        self.address_entry = tk.Text(add_frame, width=30, height=3, relief="solid", borderwidth=1)
         self.address_entry.grid(row=1, column=1, padx=5, pady=5)
         
-        tk.Button(
+        ttk.Button(
             add_frame,
             text="➕ Şube Oluştur",
-            command=self.create_new_branch,
-            bg="#4CAF50",
-            fg="white"
+            command=self.create_new_branch
         ).grid(row=2, columnspan=2, pady=10)
         
         # Alt çerçeve - Mevcut şubeler
-        list_frame = tk.LabelFrame(self.dialog, text="Mevcut Şubeler", padx=10, pady=10)
-        list_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+        list_frame = ttk.LabelFrame(self.dialog, text="Mevcut Şubeler", padding=12)
+        list_frame.pack(fill=tk.BOTH, expand=True, padx=12, pady=12)
         
         # Scrollbar ile liste
         tree_scroll = tk.Scrollbar(list_frame)
@@ -73,12 +72,10 @@ class BranchManagerDialog:
         self.tree.bind("<Return>", self.on_branch_select)
         
         # Seç butonu
-        tk.Button(
+        ttk.Button(
             list_frame,
             text="✅ Şubeyi Seç",
-            command=self.select_branch,
-            bg="#2196F3",
-            fg="white"
+            command=self.select_branch
         ).pack(fill=tk.X, pady=5)
         
         # Şubeleri yükle
