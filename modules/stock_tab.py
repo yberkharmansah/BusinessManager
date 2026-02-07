@@ -9,7 +9,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from database import (
     get_all_products, add_product, update_product_quantity,
-    get_low_stock_products, update_product_info, fetch_one
+    get_low_stock_products, update_product_info, fetch_one, delete_product
 )
 
 from modules.stock_reports import StockReportsDialog
@@ -46,6 +46,22 @@ class StockTab:
             variable=self.low_stock_var,
             command=self.load_products
         ).pack(side=tk.LEFT, padx=10)
+
+        tk.Button(
+            top_frame,
+            text="📈 Stok Ekle",
+            command=self.increase_stock,
+            bg="#2e7d32",
+            fg="white"
+        ).pack(side=tk.LEFT, padx=5)
+
+        tk.Button(
+            top_frame,
+            text="📉 Stok Azalt",
+            command=self.decrease_stock,
+            bg="#c62828",
+            fg="white"
+        ).pack(side=tk.LEFT, padx=5)
         
         # Butonlar
         tk.Button(
@@ -537,8 +553,24 @@ class StockTab:
             messagebox.showerror("Hata", "Ürün güncellenemedi!")
     
     def delete_product(self):
-        """Ürün silme (şimdilik pasif)"""
-        messagebox.showinfo("Bilgi", "Ürün silme özelliği yakında eklenecek!")
+        """Ürün silme"""
+        selection = self.tree.selection()
+        if not selection:
+            messagebox.showwarning("Seçim Yok", "Lütfen bir ürün seçin!")
+            return
+
+        product_id = self.tree.item(selection[0])['values'][0]
+        product_name = self.tree.item(selection[0])['values'][1]
+
+        if not messagebox.askyesno("Silme Onayı", f"'{product_name}' ürününü silmek istiyor musunuz?"):
+            return
+
+        success = delete_product(product_id)
+        if success:
+            messagebox.showinfo("Başarılı", f"Ürün silindi: {product_name}")
+            self.load_products()
+        else:
+            messagebox.showerror("Hata", "Ürün silinemedi!")
     
     def open_stock_reports(self):
         """Stok raporları penceresini açar"""
