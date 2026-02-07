@@ -1,0 +1,50 @@
+# ---- Python ----
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+
+# ---- Virtual env ----
+.venv/
+venv/
+env/
+ENV/
+
+# ---- Logs ----
+*.log
+
+# ---- IDE ----
+.vscode/
+.idea/
+
+# ---- Local config/secrets ----
+.env
+.env.*
+
+# ---- Database files (common) ----
+*.db
+*.sqlite
+*.sqlite3
+*.mdb
+*.accdb
+*.db-journal
+*.sqlite-journal
+*.sqlite-wal
+*.sqlite-shm
+
+# If you have a db folder (common)
+db/
+database/
+data/
+
+# ---- Django / Flask extras (optional) ----
+*.local
+instance/
