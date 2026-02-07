@@ -9,7 +9,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from database import (
     get_all_products, add_product, update_product_quantity,
-    get_low_stock_products, update_product_info, fetch_one
+    get_low_stock_products, update_product_info, fetch_one, delete_product
 )
 
 from modules.stock_reports import StockReportsDialog
@@ -28,47 +28,53 @@ class StockTab:
     
     def create_widgets(self):
         # Üst çerçeve - Kontroller
-        top_frame = tk.Frame(self.parent)
-        top_frame.pack(fill=tk.X, padx=10, pady=10)
+        top_frame = ttk.Frame(self.parent)
+        top_frame.pack(fill=tk.X, padx=16, pady=12)
         
         # Arama
-        tk.Label(top_frame, text="🔍 Ara:").pack(side=tk.LEFT)
+        ttk.Label(top_frame, text="🔍 Ara:").pack(side=tk.LEFT)
         self.search_var = tk.StringVar()
         self.search_var.trace("w", self.on_search_change)
-        self.search_entry = tk.Entry(top_frame, textvariable=self.search_var, width=25)
+        self.search_entry = ttk.Entry(top_frame, textvariable=self.search_var, width=25)
         self.search_entry.pack(side=tk.LEFT, padx=5)
         
         # Düşük stok filtresi
         self.low_stock_var = tk.BooleanVar()
-        tk.Checkbutton(
+        ttk.Checkbutton(
             top_frame,
             text="Düşük Stok",
             variable=self.low_stock_var,
             command=self.load_products
         ).pack(side=tk.LEFT, padx=10)
+
+        ttk.Button(
+            top_frame,
+            text="📈 Stok Ekle",
+            command=self.increase_stock
+        ).pack(side=tk.LEFT, padx=5)
+
+        ttk.Button(
+            top_frame,
+            text="📉 Stok Azalt",
+            command=self.decrease_stock
+        ).pack(side=tk.LEFT, padx=5)
         
         # Butonlar
-        tk.Button(
+        ttk.Button(
             top_frame,
             text="➕ Ürün Ekle",
-            command=self.add_product_dialog,
-            bg="#4CAF50",
-            fg="white",
-            font=("Arial", 10, "bold")
+            command=self.add_product_dialog
         ).pack(side=tk.RIGHT, padx=5)
         
-        tk.Button(
+        ttk.Button(
             top_frame,
             text="📋 Stok Raporları",
-            command=self.open_stock_reports,
-            bg="#FF9800",
-            fg="white",
-            font=("Arial", 10, "bold")
+            command=self.open_stock_reports
         ).pack(side=tk.RIGHT, padx=5)
         
         # Orta çerçeve - Ürün listesi
-        list_frame = tk.Frame(self.parent)
-        list_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=5)
+        list_frame = ttk.Frame(self.parent)
+        list_frame.pack(fill=tk.BOTH, expand=True, padx=16, pady=8)
         
         # Scrollbar'lar
         y_scroll = tk.Scrollbar(list_frame)
@@ -122,19 +128,17 @@ class StockTab:
         self.tree.bind("<Double-1>", lambda e: self.edit_product())
         
         # Alt çerçeve - Bilgi
-        bottom_frame = tk.Frame(self.parent)
-        bottom_frame.pack(fill=tk.X, padx=10, pady=10)
+        bottom_frame = ttk.Frame(self.parent)
+        bottom_frame.pack(fill=tk.X, padx=16, pady=12)
         
-        self.info_label = tk.Label(bottom_frame, text="Toplam Ürün: 0 | Düşük Stok: 0", font=("Arial", 10))
+        self.info_label = ttk.Label(bottom_frame, text="Toplam Ürün: 0 | Düşük Stok: 0")
         self.info_label.pack(side=tk.LEFT)
         
         # Refresh butonu
-        tk.Button(
+        ttk.Button(
             bottom_frame,
             text="🔄 Yenile",
-            command=self.load_products,
-            bg="#9E9E9E",
-            fg="white"
+            command=self.load_products
         ).pack(side=tk.RIGHT)
     
     def sort_by_column(self, col):
@@ -252,16 +256,17 @@ class StockTab:
         dialog = tk.Toplevel(self.parent)
         dialog.title("➕ Yeni Ürün Ekle")
         dialog.geometry("400x400")
+        dialog.configure(bg="#f5f7fb")
         dialog.transient(self.parent)
         dialog.grab_set()
         
         # Form alanları
         fields = [
-            ("Ürün Adı *:", "name", tk.Entry),
-            ("Barkod:", "barcode", tk.Entry),
+            ("Ürün Adı *:", "name", ttk.Entry),
+            ("Barkod:", "barcode", ttk.Entry),
             ("Miktar *:", "quantity", tk.Spinbox, {"from_": 0, "to_": 99999}),
             ("Min Stok:", "min_stock", tk.Spinbox, {"from_": 0, "to_": 99999, "value": 10}),
-            ("Birim Fiyat:", "unit_price", tk.Entry),
+            ("Birim Fiyat:", "unit_price", ttk.Entry),
         ]
         
         entries = {}
@@ -271,7 +276,7 @@ class StockTab:
             field_name = field_info[1]
             widget_type = field_info[2]
             
-            tk.Label(dialog, text=label_text).grid(row=i, column=0, padx=10, pady=5, sticky="w")
+            ttk.Label(dialog, text=label_text).grid(row=i, column=0, padx=10, pady=5, sticky="w")
             
             if len(field_info) > 3:
                 widget = widget_type(dialog, **field_info[3])
@@ -282,25 +287,19 @@ class StockTab:
             entries[field_name] = widget
         
         # Butonlar
-        button_frame = tk.Frame(dialog)
+        button_frame = ttk.Frame(dialog)
         button_frame.grid(row=len(fields), column=0, columnspan=2, pady=20)
         
-        tk.Button(
+        ttk.Button(
             button_frame,
             text="💾 Kaydet",
-            command=lambda: self.save_product(dialog, entries),
-            bg="#4CAF50",
-            fg="white",
-            font=("Arial", 10, "bold")
+            command=lambda: self.save_product(dialog, entries)
         ).pack(side=tk.LEFT, padx=10)
         
-        tk.Button(
+        ttk.Button(
             button_frame,
             text="❌ İptal",
-            command=dialog.destroy,
-            bg="#f44336",
-            fg="white",
-            font=("Arial", 10, "bold")
+            command=dialog.destroy
         ).pack(side=tk.LEFT, padx=10)
     
     def save_product(self, dialog, entries):
@@ -359,46 +358,41 @@ class StockTab:
         dialog = tk.Toplevel(self.parent)
         dialog.title("📦 Stok Değişikliği")
         dialog.geometry("400x300")
+        dialog.configure(bg="#f5f7fb")
         dialog.transient(self.parent)
         dialog.grab_set()
         
         # Bilgi
-        tk.Label(dialog, text=f"Ürün: {product_name}", font=("Arial", 10, "bold")).pack(pady=10)
-        tk.Label(dialog, text=f"Mevcut Miktar: {current_qty}", font=("Arial", 10)).pack()
+        ttk.Label(dialog, text=f"Ürün: {product_name}").pack(pady=10)
+        ttk.Label(dialog, text=f"Mevcut Miktar: {current_qty}").pack()
         
         # Form
-        tk.Label(dialog, text="Miktar:").pack(pady=10)
+        ttk.Label(dialog, text="Miktar:").pack(pady=10)
         qty_spinbox = tk.Spinbox(dialog, from_=1, to_=99999, font=("Arial", 12))
         qty_spinbox.pack()
         
-        tk.Label(dialog, text="Not:").pack(pady=10)
-        note_text = tk.Text(dialog, height=3, width=40)
+        ttk.Label(dialog, text="Not:").pack(pady=10)
+        note_text = tk.Text(dialog, height=3, width=40, relief="solid", borderwidth=1)
         note_text.pack()
         
         # Butonlar
-        button_frame = tk.Frame(dialog)
+        button_frame = ttk.Frame(dialog)
         button_frame.pack(pady=20)
         
         action_text = "Stok Ekle" if move_type == "IN" else "Stok Azalt"
-        action_color = "#4CAF50" if move_type == "IN" else "#f44336"
-        
-        tk.Button(
+        ttk.Button(
             button_frame,
             text=action_text,
             command=lambda: self.apply_stock_change(
                 dialog, product_id, move_type, qty_spinbox, note_text, current_qty
             ),
-            bg=action_color,
-            fg="white",
-            font=("Arial", 10, "bold")
+            style="Primary.TButton"
         ).pack(side=tk.LEFT, padx=10)
         
-        tk.Button(
+        ttk.Button(
             button_frame,
             text="İptal",
-            command=dialog.destroy,
-            bg="#9E9E9E",
-            fg="white"
+            command=dialog.destroy
         ).pack(side=tk.LEFT, padx=10)
     
     def apply_stock_change(self, dialog, product_id, move_type, qty_widget, note_widget, old_qty):
@@ -445,15 +439,16 @@ class StockTab:
         dialog = tk.Toplevel(self.parent)
         dialog.title(f"✏️ Ürün Düzenle: {product['name']}")
         dialog.geometry("400x450")
+        dialog.configure(bg="#f5f7fb")
         dialog.transient(self.parent)
         dialog.grab_set()
         
         # Form alanları
         fields = [
-            ("Ürün Adı *:", "name", tk.Entry, product['name']),
-            ("Barkod:", "barcode", tk.Entry, product['barcode'] or ""),
+            ("Ürün Adı *:", "name", ttk.Entry, product['name']),
+            ("Barkod:", "barcode", ttk.Entry, product['barcode'] or ""),
             ("Min Stok:", "min_stock", tk.Spinbox, {"from_": 0, "to_": 99999}, product['min_stock']),
-            ("Birim Fiyat:", "unit_price", tk.Entry, str(product['unit_price'])),
+            ("Birim Fiyat:", "unit_price", ttk.Entry, str(product['unit_price'])),
         ]
         
         entries = {}
@@ -463,7 +458,7 @@ class StockTab:
             field_name = field_info[1]
             widget_type = field_info[2]
             
-            tk.Label(dialog, text=label_text).grid(row=i, column=0, padx=10, pady=5, sticky="w")
+            ttk.Label(dialog, text=label_text).grid(row=i, column=0, padx=10, pady=5, sticky="w")
             
             if widget_type == tk.Spinbox:
                 widget = widget_type(dialog, **field_info[3])
@@ -478,37 +473,30 @@ class StockTab:
         
         # Miktar bilgisi (read-only)
         i = len(fields)
-        tk.Label(dialog, text="Miktar:", fg="gray").grid(row=i, column=0, padx=10, pady=5, sticky="w")
-        tk.Label(dialog, text=str(product['quantity']), font=("Arial", 10, "bold"), fg="#4CAF50").grid(row=i, column=1, padx=10, pady=5, sticky="w")
+        ttk.Label(dialog, text="Miktar:", foreground="#64748b").grid(row=i, column=0, padx=10, pady=5, sticky="w")
+        ttk.Label(dialog, text=str(product['quantity'])).grid(row=i, column=1, padx=10, pady=5, sticky="w")
         
-        tk.Label(
+        ttk.Label(
             dialog,
             text="⚠️ Miktar değişikliği için sağ tık → Stok Ekle/Azalt kullanın",
-            fg="orange",
-            font=("Arial", 9, "italic"),
+            foreground="#f59e0b",
             wraplength=350
         ).grid(row=i+1, column=0, columnspan=2, padx=10, pady=5)
         
         # Butonlar
-        button_frame = tk.Frame(dialog)
+        button_frame = ttk.Frame(dialog)
         button_frame.grid(row=i+2, column=0, columnspan=2, pady=20)
         
-        tk.Button(
+        ttk.Button(
             button_frame,
             text="💾 Güncelle",
-            command=lambda: self.save_edited_product(dialog, product_id, entries),
-            bg="#4CAF50",
-            fg="white",
-            font=("Arial", 10, "bold")
+            command=lambda: self.save_edited_product(dialog, product_id, entries)
         ).pack(side=tk.LEFT, padx=10)
         
-        tk.Button(
+        ttk.Button(
             button_frame,
             text="❌ İptal",
-            command=dialog.destroy,
-            bg="#f44336",
-            fg="white",
-            font=("Arial", 10, "bold")
+            command=dialog.destroy
         ).pack(side=tk.LEFT, padx=10)
     
     def save_edited_product(self, dialog, product_id, entries):
@@ -537,8 +525,24 @@ class StockTab:
             messagebox.showerror("Hata", "Ürün güncellenemedi!")
     
     def delete_product(self):
-        """Ürün silme (şimdilik pasif)"""
-        messagebox.showinfo("Bilgi", "Ürün silme özelliği yakında eklenecek!")
+        """Ürün silme"""
+        selection = self.tree.selection()
+        if not selection:
+            messagebox.showwarning("Seçim Yok", "Lütfen bir ürün seçin!")
+            return
+
+        product_id = self.tree.item(selection[0])['values'][0]
+        product_name = self.tree.item(selection[0])['values'][1]
+
+        if not messagebox.askyesno("Silme Onayı", f"'{product_name}' ürününü silmek istiyor musunuz?"):
+            return
+
+        success = delete_product(product_id)
+        if success:
+            messagebox.showinfo("Başarılı", f"Ürün silindi: {product_name}")
+            self.load_products()
+        else:
+            messagebox.showerror("Hata", "Ürün silinemedi!")
     
     def open_stock_reports(self):
         """Stok raporları penceresini açar"""

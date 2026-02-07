@@ -16,6 +16,8 @@ class BusinessManagerApp:
         self.root = root
         self.root.title("🏪 İşletme Yönetim Sistemi")
         self.root.geometry("1200x700")
+        self.root.configure(bg="#f5f7fb")
+        self.setup_styles()
         
         # Veritabanını başlat
         initialize_database()
@@ -24,7 +26,7 @@ class BusinessManagerApp:
         self.current_branch = None
         
         # Ana çerçeve
-        self.main_frame = tk.Frame(self.root)
+        self.main_frame = ttk.Frame(self.root)
         self.main_frame.pack(fill=tk.BOTH, expand=True)
         
         # Şube seçim ekranını göster
@@ -36,52 +38,54 @@ class BusinessManagerApp:
             widget.destroy()
         
         # Başlık
-        title_label = tk.Label(
-            self.main_frame, 
-            text="🏪 İşletme Yönetim Sistemi", 
-            font=("Arial", 24, "bold")
-        )
-        title_label.pack(pady=30)
+        hero_frame = ttk.Frame(self.main_frame)
+        hero_frame.pack(fill=tk.X, padx=40, pady=(30, 20))
+        ttk.Label(
+            hero_frame,
+            text="🏪 İşletme Yönetim Sistemi",
+            style="Hero.TLabel"
+        ).pack(anchor="w")
+        ttk.Label(
+            hero_frame,
+            text="Şubenizi seçin veya yeni şube oluşturarak yönetimi başlatın.",
+            style="Subtitle.TLabel"
+        ).pack(anchor="w", pady=(8, 0))
         
         # Şube seçim butonu
-        select_btn = tk.Button(
-            self.main_frame,
+        action_frame = ttk.Frame(self.main_frame)
+        action_frame.pack(fill=tk.X, padx=40, pady=(0, 20))
+        ttk.Button(
+            action_frame,
             text="📍 Şube Seç / Oluştur",
             command=self.select_branch,
-            font=("Arial", 14),
-            bg="#4CAF50",
-            fg="white",
-            padx=20,
-            pady=10
-        )
-        select_btn.pack(pady=20)
+            style="Primary.TButton"
+        ).pack(anchor="w")
         
         # Mevcut şubeleri listele
         branches = get_all_branches()
         if branches:
-            tk.Label(
+            ttk.Label(
                 self.main_frame,
-                text="Mevcut Şubeler:",
-                font=("Arial", 12, "bold")
-            ).pack(pady=(30, 10))
+                text="Mevcut Şubeler",
+                style="Section.TLabel"
+            ).pack(anchor="w", padx=40, pady=(10, 10))
             
             for branch in branches:
-                branch_frame = tk.Frame(self.main_frame)
-                branch_frame.pack(fill=tk.X, padx=50, pady=5)
+                branch_frame = ttk.Frame(self.main_frame, style="Card.TFrame")
+                branch_frame.pack(fill=tk.X, padx=40, pady=6)
                 
-                tk.Label(
+                ttk.Label(
                     branch_frame,
                     text=f"📍 {branch['name']}",
-                    font=("Arial", 11)
-                ).pack(side=tk.LEFT)
+                    style="Body.TLabel"
+                ).pack(side=tk.LEFT, padx=12, pady=12)
                 
-                tk.Button(
+                ttk.Button(
                     branch_frame,
                     text="Seç",
                     command=lambda b=branch: self.set_branch(b),
-                    bg="#2196F3",
-                    fg="white"
-                ).pack(side=tk.RIGHT)
+                    style="Secondary.TButton"
+                ).pack(side=tk.RIGHT, padx=12, pady=10)
     
     def select_branch(self):
         """Şube seçim/yaratma penceresini açar"""
@@ -102,27 +106,24 @@ class BusinessManagerApp:
             widget.destroy()
         
         # Üst bar
-        top_bar = tk.Frame(self.main_frame, bg="#2c3e50", height=50)
+        top_bar = ttk.Frame(self.main_frame, style="Topbar.TFrame")
         top_bar.pack(fill=tk.X)
         
         # Şube bilgisi
-        branch_label = tk.Label(
+        branch_label = ttk.Label(
             top_bar,
             text=f"🏪 Aktif Şube: {self.current_branch['name']}",
-            bg="#2c3e50",
-            fg="white",
-            font=("Arial", 12, "bold")
+            style="Topbar.TLabel"
         )
-        branch_label.pack(side=tk.LEFT, padx=20, pady=10)
+        branch_label.pack(side=tk.LEFT, padx=20, pady=14)
         
         # Geri dönüş butonu
-        tk.Button(
+        ttk.Button(
             top_bar,
             text="Şube Değiştir",
             command=self.show_branch_selection,
-            bg="#e74c3c",
-            fg="white"
-        ).pack(side=tk.RIGHT, padx=20)
+            style="Danger.TButton"
+        ).pack(side=tk.RIGHT, padx=20, pady=10)
         
         # Tab kontrolü
         self.tab_control = ttk.Notebook(self.main_frame)
@@ -143,9 +144,39 @@ class BusinessManagerApp:
         self.supplier_module = SupplierTab(self.supplier_tab, self.current_branch['id'])
         from modules.finance_tab import FinanceTab
         self.finance_module = FinanceTab(self.finance_tab, self.current_branch['id'])
+
+    def setup_styles(self):
+        style = ttk.Style(self.root)
+        try:
+            style.theme_use("clam")
+        except tk.TclError:
+            pass
+
+        style.configure("TFrame", background="#f5f7fb")
+        style.configure("Card.TFrame", background="#ffffff", relief="solid", borderwidth=1)
+        style.configure("Topbar.TFrame", background="#0f172a")
+        style.configure("TLabel", background="#f5f7fb", foreground="#0f172a", font=("Segoe UI", 10))
+        style.configure("Hero.TLabel", font=("Segoe UI Semibold", 24), foreground="#0f172a")
+        style.configure("Subtitle.TLabel", font=("Segoe UI", 11), foreground="#64748b")
+        style.configure("Section.TLabel", font=("Segoe UI Semibold", 12), foreground="#0f172a")
+        style.configure("Body.TLabel", font=("Segoe UI", 11), foreground="#0f172a", background="#ffffff")
+        style.configure("Topbar.TLabel", background="#0f172a", foreground="#ffffff", font=("Segoe UI Semibold", 11))
+
+        style.configure("Primary.TButton", font=("Segoe UI Semibold", 10), padding=(14, 8),
+                        background="#2563eb", foreground="#ffffff")
+        style.map("Primary.TButton", background=[("active", "#1d4ed8")])
+
+        style.configure("Secondary.TButton", font=("Segoe UI Semibold", 10), padding=(12, 6),
+                        background="#e2e8f0", foreground="#0f172a")
+        style.map("Secondary.TButton", background=[("active", "#cbd5f5")])
+
+        style.configure("Danger.TButton", font=("Segoe UI Semibold", 10), padding=(12, 6),
+                        background="#ef4444", foreground="#ffffff")
+        style.map("Danger.TButton", background=[("active", "#dc2626")])
+
+        style.configure("TNotebook", background="#f5f7fb", borderwidth=0)
+        style.configure("TNotebook.Tab", padding=(12, 8), font=("Segoe UI Semibold", 10))
         
-        # Boş modüller için mesaj
-        tk.Label(self.finance_tab, text="Gelir/Gider modülü yakında eklenecek...", font=("Arial", 14)).pack(pady=50)
 
 def main():
     root = tk.Tk()
