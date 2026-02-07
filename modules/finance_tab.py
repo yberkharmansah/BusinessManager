@@ -150,7 +150,7 @@ class FinanceTab:
         self.tree.pack(fill=tk.BOTH, expand=True)
 
         self.empty_label = ttk.Label(list_frame, text="Henüz işlem yok. İlk işlemi ekleyin.", style="Empty.TLabel")
-        self.empty_label.place(relx=0.5, rely=0.5, anchor="center")
+        self.empty_label.place(relx=0.5, rely=0.6, anchor="center")
         
         # Sağ tık menüsü
         self.context_menu = tk.Menu(self.tree, tearoff=0)
