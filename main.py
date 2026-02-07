@@ -144,8 +144,6 @@ class BusinessManagerApp:
         from modules.finance_tab import FinanceTab
         self.finance_module = FinanceTab(self.finance_tab, self.current_branch['id'])
         
-        # Boş modüller için mesaj
-        tk.Label(self.finance_tab, text="Gelir/Gider modülü yakında eklenecek...", font=("Arial", 14)).pack(pady=50)
 
 def main():
     root = tk.Tk()

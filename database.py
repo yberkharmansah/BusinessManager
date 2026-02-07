@@ -1,7 +1,7 @@
 # database.py
 import sqlite3
 import os
-from datetime import datetime
+from datetime import datetime, timedelta
 
 DB_NAME = "business_manager.db"
 
@@ -230,6 +230,22 @@ def update_product_info(product_id, name, barcode, min_stock, unit_price):
         
     except Exception as e:
         print(f"Ürün güncelleme hatası: {e}")
+        return False
+    finally:
+        conn.close()
+
+def delete_product(product_id):
+    """Ürünü siler"""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    try:
+        cursor.execute("DELETE FROM stock_movements WHERE product_id = ?", (product_id,))
+        cursor.execute("DELETE FROM products WHERE id = ?", (product_id,))
+        conn.commit()
+        return True
+    except Exception as e:
+        print(f"Ürün silme hatası: {e}")
         return False
     finally:
         conn.close()

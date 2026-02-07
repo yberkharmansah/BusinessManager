@@ -228,7 +228,8 @@ class FinanceTab:
         total = 0
         for trans in transactions:
             # Arama filtresi
-            if search_term and search_term not in trans['description'].lower() and search_term not in str(trans['amount']):
+            description = trans['description'] or ""
+            if search_term and search_term not in description.lower() and search_term not in str(trans['amount']):
                 continue
             
             self.tree.insert("", tk.END, values=(

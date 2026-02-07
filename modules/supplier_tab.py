@@ -124,12 +124,13 @@ class SupplierTab:
         
         self.balance_tree = ttk.Treeview(
             right_panel,
-            columns=("Date", "Supplier", "Type", "Amount", "DueDate", "Status", "Desc"),
+            columns=("BalanceID", "Date", "Supplier", "Type", "Amount", "DueDate", "Status", "Desc"),
             show="headings",
             height=15,
             yscrollcommand=scroll_y2.set
         )
         
+        self.balance_tree.heading("BalanceID", text="ID")
         self.balance_tree.heading("Date", text="Tarih")
         self.balance_tree.heading("Supplier", text="Toptancı")
         self.balance_tree.heading("Type", text="İşlem")
@@ -138,6 +139,7 @@ class SupplierTab:
         self.balance_tree.heading("Status", text="Durum")
         self.balance_tree.heading("Desc", text="Açıklama")
         
+        self.balance_tree.column("BalanceID", width=50, anchor="center")
         self.balance_tree.column("Date", width=120)
         self.balance_tree.column("Supplier", width=140)
         self.balance_tree.column("Type", width=80, anchor="center")
@@ -264,6 +266,7 @@ class SupplierTab:
                 tag = 'active'
             
             self.balance_tree.insert("", tk.END, values=(
+                balance['id'],
                 balance['date'],
                 balance['supplier_name'],
                 balance_type,
@@ -784,15 +787,7 @@ class SupplierTab:
             return
         
         values = self.balance_tree.item(selection[0])['values']
-        
-        # Balance ID'yi bul
-        balance_id = fetch_one("""
-            SELECT sb.id 
-            FROM supplier_balances sb
-            JOIN suppliers sup ON sb.supplier_id = sup.id
-            WHERE sup.name = ? AND sb.date = ? AND sb.type = ?
-            ORDER BY sb.id DESC LIMIT 1
-        """, (values[1], values[0], values[2]))['id']
+        balance_id = values[0]
         
         dialog = tk.Toplevel(self.parent)
         dialog.title("🔄 Durum Güncelle")
@@ -802,7 +797,7 @@ class SupplierTab:
         
         tk.Label(dialog, text="Yeni Durum:").pack(pady=10)
         status_combo = ttk.Combobox(dialog, values=["AKTIF", "ODENDI", "GECIKMIS"], state="readonly")
-        status_combo.set(values[5])  # Mevcut durumu göster
+        status_combo.set(values[6])  # Mevcut durumu göster
         status_combo.pack()
         
         button_frame = tk.Frame(dialog)
@@ -917,13 +912,13 @@ class SupplierTab:
         details = f"""
 📋 BAKİYE DETAYI
 
-Toptancı: {values[1]}
-İşlem Türü: {values[2]}
-Tutar: {values[3]}
-Tarih: {values[0]}
-Vade Tarihi: {values[4]}
-Durum: {values[5]}
-Açıklama: {values[6] or 'Yok'}
+Toptancı: {values[2]}
+İşlem Türü: {values[3]}
+Tutar: {values[4]}
+Tarih: {values[1]}
+Vade Tarihi: {values[5]}
+Durum: {values[6]}
+Açıklama: {values[7] or 'Yok'}
 
 💡 İPUCU:
 - Ödeme yapmak için sağ tık → Ödeme Yap

@@ -7,50 +7,7 @@ import os
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from database import fetch_all
-
-def get_stock_movements_report(branch_id, product_id=None, start_date=None, end_date=None):
-    """Stok hareketlerini filtreli getirir"""
-    query = """
-        SELECT 
-            sm.id,
-            sm.product_id,
-            p.name as product_name,
-            p.barcode,
-            sm.type,
-            sm.quantity,
-            sm.old_quantity,
-            sm.new_quantity,
-            sm.note,
-            sm.date
-        FROM stock_movements sm
-        JOIN products p ON sm.product_id = p.id
-        WHERE p.branch_id = ?
-    """
-    params = [branch_id]
-    
-    if product_id:
-        query += " AND sm.product_id = ?"
-        params.append(product_id)
-    
-    if start_date:
-        query += " AND sm.date >= ?"
-        params.append(start_date)
-    
-    if end_date:
-        query += " AND sm.date <= ?"
-        params.append(end_date + " 23:59:59")
-    
-    query += " ORDER BY sm.date DESC"
-    
-    return fetch_all(query, params)
-
-def get_all_products(branch_id):
-    """Tüm ürünleri getirir"""
-    return fetch_all(
-        "SELECT * FROM products WHERE branch_id = ? ORDER BY name",
-        (branch_id,)
-    )
+from database import get_all_products, get_stock_movements_report
 
 class StockReportsDialog:
     def __init__(self, parent, branch_id):
